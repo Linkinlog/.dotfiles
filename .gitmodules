@@ -1,0 +1,9 @@
+[submodule "/Users/dseyler/.config/nvim"]
+	path = /Users/dseyler/.config/nvim
+	url = git@github.com:Linkinlog/nvim.git
+[submodule "/Users/dseyler/.config/tmux"]
+	path = /Users/dseyler/.config/tmux
+	url = git@github.com:Linkinlog/tmux.git
+[submodule "/Users/dseyler/.config/zsh"]
+	path = /Users/dseyler/.config/zsh
+	url = git@github.com:Linkinlog/zsh.git
