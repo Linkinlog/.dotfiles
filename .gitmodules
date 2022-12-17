@@ -1,10 +1,10 @@
-[submodule "/Users/dseyler/.config/nvim"]
-	path = /Users/dseyler/.config/nvim
+[submodule ".config/nvim"]
+	path = ~/.config/nvim
 	url = https://github.com/Linkinlog/nvim
 	branch = development
-[submodule "/Users/dseyler/.config/tmux"]
-	path = /Users/dseyler/.config/tmux
+[submodule ".config/tmux"]
+	path = ~/.config/tmux
 	url = git@github.com:Linkinlog/tmux.git
-[submodule "/Users/dseyler/.config/zsh"]
-	path = /Users/dseyler/.config/zsh
+[submodule ".config/zsh"]
+	path = ~/.config/zsh
 	url = git@github.com:Linkinlog/zsh.git
