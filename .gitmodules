@@ -1,10 +1,10 @@
 [submodule ".config/nvim"]
-	path = ~/.config/nvim
+	path = .config/nvim
 	url = https://github.com/Linkinlog/nvim
 	branch = development
 [submodule ".config/tmux"]
-	path = ~/.config/tmux
+	path = .config/tmux
 	url = git@github.com:Linkinlog/tmux.git
 [submodule ".config/zsh"]
-	path = ~/.config/zsh
+	path = .config/zsh
 	url = git@github.com:Linkinlog/zsh.git
