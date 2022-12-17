@@ -1,6 +1,7 @@
 [submodule "/Users/dseyler/.config/nvim"]
 	path = /Users/dseyler/.config/nvim
-	url = git@github.com:Linkinlog/nvim.git
+	url = https://github.com/Linkinlog/nvim
+	branch = development
 [submodule "/Users/dseyler/.config/tmux"]
 	path = /Users/dseyler/.config/tmux
 	url = git@github.com:Linkinlog/tmux.git
