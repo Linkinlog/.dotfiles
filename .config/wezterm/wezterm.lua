@@ -9,8 +9,8 @@ return {
             repeat_x = "NoRepeat",
             repeat_y = "NoRepeat",
             height = "Cover",
-            width = "Cover",
-            horizontal_align = "Center",
+            horizontal_align = "Right",
+            horizontal_offset = "15cell",
         }
-    }
+    },
 }
