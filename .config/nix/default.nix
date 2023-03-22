@@ -10,6 +10,7 @@ in {
   xclip          = pkgs.xclip;
   tree-sitter    = pkgs.tree-sitter;
   docker         = pkgs.docker;
+  wezterm        = pkgs.wezterm;
   ripgrep        = pkgs.ripgrep;
   # Langs
   go             = pkgs.go;
@@ -19,6 +20,8 @@ in {
   pip3           = pkgs.python3Packages.pip;
   # Deps
   gcc            = pkgs.gcc.cc.lib;
+  autoconf       = pkgs.autoconf;
+  clang          = pkgs.clang;
   reftools       = pkgs.reftools;
   gofumpt        = pkgs.gofumpt;
   mockgen        = pkgs.mockgen;

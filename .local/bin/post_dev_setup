@@ -39,8 +39,7 @@ cd $HOME/zsh
 ./Util/preconfig
 ./configure
 make
-make check
-make install
+make check && sudo make install
 cd -
 
 # Setup ohmyzsh
