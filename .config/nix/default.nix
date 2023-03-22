@@ -15,8 +15,6 @@ in {
   go             = pkgs.go;
   gotools        = pkgs.go;
   rustup         = pkgs.rustup;
-  bash           = pkgs.bash;
-  zsh            = pkgs.zsh;
   # Deps
   gcc            = pkgs.gcc.cc.lib;
   reftools       = pkgs.reftools;
