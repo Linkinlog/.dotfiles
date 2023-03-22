@@ -20,16 +20,16 @@ then
 fi
 
 echo "Setting up bare repo"
-git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
-git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME checkout
+#git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
+#git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME checkout
 git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
 
 
 # Setup Python3 for nvim and thefuck for zsh
-if command -v pip3 &> /dev/null
+if command -v python3 &> /dev/null
 then
 	echo "Insalling python deps..."
-    python3 -m pip install thefuck neovim
+    python3 -m pip install neovim
 fi
 
 # Setup ohmyzsh
