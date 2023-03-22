@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# Check for git and fail if not found
+if !command -v git &> /dev/null && command -v curl; then
+    echo "Git and curl required. Please install"
+    exit 1
+fi
+
+# Determine OS
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     machine="Linux";;
+    Darwin*)    machine="Mac";;
+    CYGWIN*)    machine="Cygwin";;
+    MINGW*)     machine="MinGw";;
+    *)          machine="UNKNOWN:${unameOut}"
+esac
+
+# Set hostname
+read -p "Enter desired hostname: " hostname
+if [ ! -z "$hostname" ]
+then
+	sudo su -c "echo '$hostname' > /etc/hostname"
+fi
+
+# Start and enable ssh
+if [ $machine == "Linux" ]
+then
+	echo "Starting and enabling ssh..."
+	sudo systemctl start sshd
+	sudo systemctl enable sshd
+fi
+
+# Make new ssh key for gh
+echo "Creating ssh key for GitHub..."
+ssh-keygen  -f ~/.ssh/github
+
+# Check if nix-env is installed
+if ! command -v nix-env &> /dev/null; then
+  echo "nix-env not found, installing Nix package manager..."
+
+  # Download and run the installation script
+  sh <(curl -L https://nixos.org/nix/install) --daemon
+
+  echo "Nix package manager installed."
+
+fi
+
+echo "Pre setup finished!"
