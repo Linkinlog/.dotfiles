@@ -21,6 +21,7 @@ in {
   # Deps
   gcc            = pkgs.gcc.cc.lib;
   autoconf       = pkgs.autoconf;
+  ncurses        = pkgs.ncurses;
   clang          = pkgs.clang;
   reftools       = pkgs.reftools;
   gofumpt        = pkgs.gofumpt;
