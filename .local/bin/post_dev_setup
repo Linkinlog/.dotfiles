@@ -35,9 +35,10 @@ fi
 # Setup zsh from source
 echo "Building zsh"
 git clone https://github.com/zsh-users/zsh $HOME/zsh
-./$HOME/zsh/Util/preconfig
-./$HOME/zsh/configure
+.$HOME/zsh/Util/preconfig
+.$HOME/zsh/configure
 make -C $HOME/zsh
+make -C $HOME/zsh check
 make -C $HOME/zsh install
 
 # Setup ohmyzsh
