@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-read -p 'Install Nix packages? (y/n) ' confirm
-if [[ $confirm =~ ^[Yy]$ ]]; then
-  echo "Installing Nix packages..."
-  nix-env -f $HOME/.config/nix/default.nix --install
-  echo "Install complete"
-fi
+export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+echo "Installing Nix packages..."
+nix-env -f $HOME/.config/nix/default.nix --install
+echo "Install complete"
 
 # Setup Github
 if command -v gh &> /dev/null
