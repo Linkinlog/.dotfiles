@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+nix-env
+read -p 'Install Nix packages? (y/n) ' confirm
+if [[ $confirm =~ ^[Yy]$ ]]; then
+  echo "Installing Nix packages..."
+  nix-env -f $HOME/.config/nix/default.nix --install
+  echo "Install complete"
+fi
+
+# Setup Github
+if command -v gh &> /dev/null
+then
+	echo "Setting up GitHub..."
+	read -p "Enter github config user.email: " email
+	read -p "Enter github config user.name: " username
+	if [ ! -z "$email" ] && [ ! -z "$username" ]
+	then
+		git config --global user.email "$email"
+		git config --global user.name "$username"
+	fi
+	gh auth login
+fi
+
+echo "Setting up bare repo"
+git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
+git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME checkout
+git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
+
+
+# Setup Python3 for nvim and thefuck for zsh
+if command -v pip3 &> /dev/null
+then
+	echo "Insalling python deps..."
+    python3 -m pip install thefuck neovim
+fi
+
+# Setup ohmyzsh
+if command -v zsh &> /dev/null
+then
+	echo "Setting up OhMyZsh"
+	export RUNZSH=no
+	export KEEP_ZSHRC=yes
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+	git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+	echo "OhMyZsh installed and configured, run zsh now"
+fi
+
+echo "Local dev setup finished hopefully!"
