@@ -9,6 +9,8 @@ in {
   tmux           = pkgs.tmux;
   xclip          = pkgs.xclip;
   tree-sitter    = pkgs.tree-sitter;
+  docker         = pkgs.docker;
+  ripgrep        = pkgs.ripgrep;
   # Langs
   go             = pkgs.go;
   gotools        = pkgs.go;
