@@ -15,6 +15,8 @@ in {
   go             = pkgs.go;
   gotools        = pkgs.go;
   rustup         = pkgs.rustup;
+  python         = pkgs.python3;
+  pip3           = pkgs.python3Packages.pip;
   # Deps
   gcc            = pkgs.gcc.cc.lib;
   reftools       = pkgs.reftools;
