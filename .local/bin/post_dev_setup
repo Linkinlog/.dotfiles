@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-nix-env
 read -p 'Install Nix packages? (y/n) ' confirm
 if [[ $confirm =~ ^[Yy]$ ]]; then
   echo "Installing Nix packages..."

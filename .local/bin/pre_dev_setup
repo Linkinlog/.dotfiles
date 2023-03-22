@@ -41,6 +41,7 @@ if ! command -v nix-env &> /dev/null; then
 
   # Download and run the installation script
   sh <(curl -L https://nixos.org/nix/install) --daemon
+  export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 
   echo "Nix package manager installed."
 
