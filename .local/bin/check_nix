@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Add Nix to the current shell session
+if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+  source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+elif [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix.sh" ]; then
+  source "/nix/var/nix/profiles/default/etc/profile.d/nix.sh"
+else
+  echo "Error: Unable to find nix.sh, please restart your shell session to load Nix."
+fi
+
+
+# Check if nix-env is installed
+if ! command -v nix-env &> /dev/null; then
+  echo "nix-env not found, installing Nix package manager..."
+
+  # Download and run the installation script
+  sh <(curl -L https://nixos.org/nix/install) --daemon
+
+  echo "Nix package manager installed."
+
+  read -p 'Install Nix packages? (y/n) ' confirm
+  if [[ $confirm =~ ^[Yy]$ ]]; then
+      echo "Installing Nix packages..."
+      nixxyi
+      echo "Install complete"
+  fi
+fi
+
