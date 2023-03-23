@@ -20,6 +20,15 @@ if [ ! -z "$email" ] && [ ! -z "$username" ]; then
     git config --global user.name "$username"
 fi
 
+# Start and enable ssh
+echo "Starting and enabling ssh..."
+sudo systemctl start sshd
+sudo systemctl enable sshd
+
+# Make new ssh key for gh
+echo "Creating ssh key for GitHub..."
+ssh-keygen  -f ~/.ssh/github
+
 # Check if nix-env is installed
 if ! command -v nix-env &> /dev/null; then
   echo "nix-env not found, installing Nix package manager..."
@@ -30,18 +39,9 @@ if ! command -v nix-env &> /dev/null; then
   echo "Nix package manager installed."
 fi
 
-# Start and enable ssh
-echo "Starting and enabling ssh..."
-sudo systemctl start sshd
-sudo systemctl enable sshd
-
-# Make new ssh key for gh
-echo "Creating ssh key for GitHub..."
-ssh-keygen  -f ~/.ssh/github
-
 # Setup Github
 echo "Setting up GitHub..."
-nix-shell $HOME/.config/nix/shell.nix --run 'gh auth login'
+nix-shell $HOME/.config/nix/shell.nix --no-build-output --run 'gh auth login'
 
 echo "Setting up bare repo's submodules"
 git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
@@ -54,7 +54,7 @@ echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix
 
 # Setup Python3 for nvim and thefuck for zsh
 echo "Insalling python deps..."
-nix-shell $HOME/.config/nix/shell.nix --run 'pip3 install --user neovim'
+nix-shell $HOME/.config/nix/shell.nix --no-build-output --run 'pip3 install --user neovim'
 
 
 if command -v zsh &>/dev/null; then
