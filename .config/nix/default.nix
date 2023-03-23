@@ -22,9 +22,6 @@ in {
   gcc            = pkgs.gcc.cc.lib;
   autoconf       = pkgs.autoconf;
   automake       = pkgs.automake;
-  gettext        = pkgs.gettext;
-  pkg-config     = pkgs.pkg-config;
-  ncurses        = pkgs.ncurses.dev;
   clang          = pkgs.clang;
   reftools       = pkgs.reftools;
   gofumpt        = pkgs.gofumpt;
