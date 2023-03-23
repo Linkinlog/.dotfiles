@@ -54,7 +54,7 @@ echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix
 
 # Setup Python3 for nvim and thefuck for zsh
 echo "Insalling python deps..."
-nix-shell -p pip3 -c 'pip3 install --user neovim'
+nix-shell -p pip3 --run 'pip3 install --user neovim'
 
 
 if command -v zsh &>/dev/null; then
