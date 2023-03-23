@@ -38,6 +38,14 @@ then
     pip3 install neovim
 fi
 
+# Setup ncurses from source for zsh
+wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
+tar xzf ncurses-6.4.tar.gz
+cd ncurses-6.4
+./configure --prefix=/opt/ncurses
+make && sudo make install
+cd
+
 # Setup zsh from source
 echo "Building zsh"
 git clone https://github.com/zsh-users/zsh $HOME/zsh
