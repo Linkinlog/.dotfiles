@@ -51,14 +51,12 @@ git clone --depth 1 https://github.com/wbthomason/packer.nvim\
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively"
 
+export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+
 # Setup Python3 for nvim and thefuck for zsh
 echo "Insalling python deps..."
 nix-shell $HOME/.config/nix/shell.nix --no-build-output --run 'pip3 install --user neovim'
 
+. "$HOME/.local/bin/zsh_setup"
 
-if command -v zsh &>/dev/null; then
-	. "$HOME/.local/bin/zsh_setup"
-fi
-
-export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 echo "Setup finished! (Hopefully)"
