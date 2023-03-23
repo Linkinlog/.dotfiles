@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# Check for git and fail if not found
+if !command -v git &> /dev/null; then
+    echo "Git required. Please install"
+    exit 1
+fi
+
+# Set hostname
+read -p "Enter desired hostname: " hostname
+if [ ! -z "$hostname" ]; then
+	sudo su -c "echo '$hostname' > /etc/hostname"
+fi
+
+# Set up Git
+read -p "Enter github config user.email: " email
+read -p "Enter github config user.name: " username
+if [ ! -z "$email" ] && [ ! -z "$username" ]; then
+    git config --global user.email "$email"
+    git config --global user.name "$username"
+fi
+
+# Make new ssh key for gh
+echo "Creating ssh key for GitHub..."
+ssh-keygen  -f ~/.ssh/github
+
+# Check if nix-env is installed
+if ! command -v nix-env &> /dev/null; then
+  echo "nix-env not found, installing Nix package manager..."
+
+  # Download and run the installation script
+  sh -c "$(wget -qO- https://nixos.org/nix/install) --daemon --yes"
+  export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+  echo "Nix package manager installed."
+  echo "Installing Nix packages..."
+  nix-env -f $HOME/.config/nix/default.nix --install
+  echo "Install complete"
+
+fi
+
+# Start and enable ssh
+echo "Starting and enabling ssh..."
+sudo systemctl start sshd
+sudo systemctl enable sshd
+
+# Setup Github
+if command -v gh &> /dev/null; then
+	echo "Setting up GitHub..."
+	gh auth login
+fi
+
+echo "Setting up bare repo's submodules"
+git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
+
+echo "Setting up packer / TPM"
+git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+ ~/.local/share/nvim/site/pack/packer/start/packer.neovim
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively"
+
+# Setup Python3 for nvim and thefuck for zsh
+if command -v python3 &> /dev/null; then
+	echo "Insalling python deps..."
+    pip3 install --user neovim
+fi
+
+
+if command -v zsh &>/dev/null; then
+	command "$HOME/.local/bin/zsh_setup"
+fi
+
+echo "Setup finished! (Hopefully)"

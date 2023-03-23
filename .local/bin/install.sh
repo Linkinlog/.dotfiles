@@ -21,5 +21,4 @@ git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout
 
 # Begin setup
 echo "Annnd we're off!"
-command "$HOME/.local/bin/pre_dev_setup"
-command "$HOME/.local/bin/post_dev_setup"
+command "$HOME/.local/bin/dev_setup"
