@@ -20,10 +20,6 @@ if [ ! -z "$email" ] && [ ! -z "$username" ]; then
     git config --global user.name "$username"
 fi
 
-# Make new ssh key for gh
-echo "Creating ssh key for GitHub..."
-ssh-keygen  -f ~/.ssh/github
-
 # Check if nix-env is installed
 if ! command -v nix-env &> /dev/null; then
   echo "nix-env not found, installing Nix package manager..."
@@ -42,6 +38,10 @@ fi
 echo "Starting and enabling ssh..."
 sudo systemctl start sshd
 sudo systemctl enable sshd
+
+# Make new ssh key for gh
+echo "Creating ssh key for GitHub..."
+ssh-keygen  -f ~/.ssh/github
 
 # Setup Github
 if command -v gh &> /dev/null; then
