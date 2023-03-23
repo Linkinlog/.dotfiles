@@ -12,7 +12,7 @@ in {
   docker         = pkgs.docker;
   wezterm        = pkgs.wezterm;
   ripgrep        = pkgs.ripgrep;
-  ssh            = pkgs.openssh;
+  zsh            = pkgs.zsh;
   # Langs
   go             = pkgs.go;
   gotools        = pkgs.go;

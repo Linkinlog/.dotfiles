@@ -4,7 +4,7 @@
 if command -v apt-get >/dev/null 2>&1; then
     echo "Using apt as package manager."
     echo "Installing dependencies with apt..."
-    sudo apt-get install git -qy
+    sudo apt-get install git ssh -qy
 elif command -v dnf >/dev/null 2>&1; then
     echo "Using dnf as package manager."
     echo "TODO"
