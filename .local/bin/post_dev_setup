@@ -4,11 +4,6 @@ export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 
 echo "Installing Nix packages..."
 nix-env -f $HOME/.config/nix/default.nix --install
-export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64"
-ncurses_path=$(nix-build '<nixpkgs>' -A ncurses.dev --no-out-link)
-export LIBRARY_PATH="${ncurses_path}/lib:${LIBRARY_PATH}"
-export CPPFLAGS="-I${ncurses_path}/include ${CPPFLAGS}"
-export LDFLAGS="-L${ncurses_path}/lib ${LDFLAGS}"
 echo "Install complete"
 
 # Setup Github
@@ -25,9 +20,7 @@ then
 	gh auth login
 fi
 
-echo "Setting up bare repo"
-#git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
-#git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME checkout
+echo "Setting up bare repo's submodules"
 git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
 
 
