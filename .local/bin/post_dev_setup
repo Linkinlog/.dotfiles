@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64"
+export PKG_CONFIG_PATH="$(nix eval --raw nixpkgs.ncurses.dev)/lib/pkgconfig:${PKG_CONFIG_PATH}"
 echo "Installing Nix packages..."
 nix-env -f $HOME/.config/nix/default.nix --install
 echo "Install complete"

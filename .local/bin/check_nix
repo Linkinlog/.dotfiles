@@ -7,6 +7,7 @@ alias nixxyu="nixxy -u"
 alias nixxyc="nix-collect-garbage && nixxyi"
 #Set up env vars
 export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64"
+export PKG_CONFIG_PATH="$(nix eval --raw nixpkgs.ncurses.dev)/lib/pkgconfig:${PKG_CONFIG_PATH}"
 # Add Nix to the current shell session
 if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
   source "$HOME/.nix-profile/etc/profile.d/nix.sh"
