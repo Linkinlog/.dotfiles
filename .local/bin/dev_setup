@@ -29,6 +29,10 @@ sudo systemctl enable sshd
 echo "Creating ssh key for GitHub..."
 ssh-keygen  -f ~/.ssh/github
 
+# Setup Github
+echo "Setting up GitHub..."
+gh auth login
+
 # Check if nix-env is installed
 if ! command -v nix-env &> /dev/null; then
   echo "nix-env not found, installing Nix package manager..."
@@ -38,10 +42,6 @@ if ! command -v nix-env &> /dev/null; then
   export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
   echo "Nix package manager installed."
 fi
-
-# Setup Github
-echo "Setting up GitHub..."
-nix-shell $HOME/.config/nix/shell.nix --no-build-output --run 'gh auth login'
 
 echo "Setting up bare repo's submodules"
 git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
