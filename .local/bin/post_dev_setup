@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
-export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64"
-export PKG_CONFIG_PATH="$(nix eval --raw nixpkgs.ncurses.dev)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+
 echo "Installing Nix packages..."
 nix-env -f $HOME/.config/nix/default.nix --install
+export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64"
+ncurses_path=$(nix-build '<nixpkgs>' -A ncurses.dev --no-out-link)
+export CPPFLAGS="-I${ncurses_path}/include ${CPPFLAGS}"
+export LDFLAGS="-L${ncurses_path}/lib ${LDFLAGS}"
 echo "Install complete"
 
 # Setup Github
