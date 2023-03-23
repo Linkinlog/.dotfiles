@@ -1,18 +1,5 @@
 #!/usr/bin/env bash
 
-if command -v apt-get >/dev/null 2>&1; then
-    echo "Using apt as package manager."
-    echo "Installing dependencies with apt..."
-    sudo apt-get install git -qy
-elif command -v dnf >/dev/null 2>&1; then
-    echo "Using dnf as package manager."
-    echo "TODO"
-    exit 1
-else
-    echo "No supported package manager found."
-    exit 1
-fi
-
 # Check for git and fail if not found
 if !command -v git &> /dev/null; then
     echo "Git and curl required. Please install"
