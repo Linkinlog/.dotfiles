@@ -38,7 +38,15 @@ then
     pip3 install neovim
 fi
 
-# Setup ncurses from source for zsh
+# Setup binutils 2.40 from source for ncurses
+wget https://ftp.gnu.org/gnu/binutils/binutils-2.40.tar.gz
+tar xzf binutils-2.40.tar.gz
+cd binutils-2.40
+./configure --prefix=/opt/binutils
+make && sudo make install
+cd
+
+# Setup ncurses 6.4 from source for zsh
 wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
 tar xzf ncurses-6.4.tar.gz
 cd ncurses-6.4
