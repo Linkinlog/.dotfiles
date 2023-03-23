@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 
+if command -v apt-get >/dev/null 2>&1; then
+    echo "Using apt as package manager."
+    echo "Installing dependencies with apt..."
+    sudo apt-get install git -qy
+elif command -v dnf >/dev/null 2>&1; then
+    echo "Using dnf as package manager."
+    echo "TODO"
+    exit 1
+else
+    echo "No supported package manager found."
+    exit 1
+fi
+
 # Check for git and fail if not found
-if !command -v git &> /dev/null && command -v curl; then
+if !command -v git &> /dev/null; then
     echo "Git and curl required. Please install"
     exit 1
 fi
@@ -40,7 +53,7 @@ if ! command -v nix-env &> /dev/null; then
   echo "nix-env not found, installing Nix package manager..."
 
   # Download and run the installation script
-  sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+  sh -c "$(wget -qO- https://nixos.org/nix/install) --daemon --yes"
   export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 
   echo "Nix package manager installed."
