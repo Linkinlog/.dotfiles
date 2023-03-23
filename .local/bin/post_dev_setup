@@ -38,42 +38,9 @@ then
     pip3 install neovim
 fi
 
-# Setup binutils 2.40 from source for ncurses
-wget https://ftp.gnu.org/gnu/binutils/binutils-2.40.tar.gz
-tar xzf binutils-2.40.tar.gz
-cd binutils-2.40
-./configure --prefix=/opt/binutils
-make && sudo make install
-cd
-
-# Setup ncurses 6.4 from source for zsh
-wget https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.4.tar.gz
-tar xzf ncurses-6.4.tar.gz
-cd ncurses-6.4
-./configure --prefix=/opt/ncurses
-make && sudo make install
-cd
-
-# Setup zsh from source
-echo "Building zsh"
-git clone https://github.com/zsh-users/zsh $HOME/zsh
-cd $HOME/zsh
-./Util/preconfig
-./configure
-make
-make check && sudo make install
-cd -
-
-# Setup ohmyzsh
-if command -v zsh &> /dev/null
-then
-	echo "Setting up OhMyZsh"
-	export RUNZSH=no
-	export KEEP_ZSHRC=yes
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-	git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-	echo "OhMyZsh installed and configured, run zsh now"
+read -p 'Set up zsh?' confirmZsh
+if [[ $confirmZsh =~ ^[Yy]$ ]]; then
+	@command "$(HOME)/.local/bin/zsh_setup"
 fi
 
 echo "Local dev setup finished hopefully!"
