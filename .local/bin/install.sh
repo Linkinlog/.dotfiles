@@ -15,9 +15,11 @@ else
 fi
 
 # Clone and checkout git repo
+echo "Setting up Git repo"
 git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
 git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout
 
 # Begin setup
-command "$(HOME)/.local/bin/pre_dev_setup"
-command "$(HOME)/.local/bin/post_dev_setup"
+echo "Annnd we're off!"
+command "$HOME/.local/bin/pre_dev_setup"
+command "$HOME/.local/bin/post_dev_setup"
