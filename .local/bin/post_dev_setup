@@ -35,10 +35,10 @@ git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remot
 if command -v python3 &> /dev/null
 then
 	echo "Insalling python deps..."
-    pip3 install neovim
+    pip3 install --user neovim
 fi
 
-read -p 'Set up zsh?' confirmZsh
+read -p 'Set up zsh?(y/n) ' confirmZsh
 if [[ $confirmZsh =~ ^[Yy]$ ]]; then
 	command "$HOME/.local/bin/zsh_setup"
 fi
