@@ -22,8 +22,8 @@ fi
 
 # Start and enable ssh
 echo "Starting and enabling ssh..."
-sudo systemctl start sshd
-sudo systemctl enable sshd
+sudo systemctl start ssh
+sudo systemctl enable ssh
 
 # Make new ssh key for gh
 echo "Creating ssh key for GitHub..."
@@ -39,7 +39,6 @@ if ! command -v nix-env &> /dev/null; then
 
   # Download and run the installation script
   sh -c "$(wget -qO- https://nixos.org/nix/install) --daemon --yes"
-  export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
   echo "Nix package manager installed."
 fi
 
@@ -58,7 +57,8 @@ nix-shell $HOME/.config/nix/shell.nix --no-build-output --run 'pip3 install --us
 
 
 if command -v zsh &>/dev/null; then
-	command "$HOME/.local/bin/zsh_setup"
+	. "$HOME/.local/bin/zsh_setup"
 fi
 
+export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 echo "Setup finished! (Hopefully)"
