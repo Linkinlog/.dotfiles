@@ -4,7 +4,7 @@
 if command -v apt-get >/dev/null 2>&1; then
     echo "Using apt as package manager."
     echo "Installing zsh"
-    sudo apt-get install zsh -qy
+    #sudo apt-get install zsh -qy
 elif command -v dnf >/dev/null 2>&1; then
     echo "Using dnf as package manager."
     echo "TODO"
@@ -15,13 +15,10 @@ else
 fi
 
 # Setup ohmyzsh
-if command -v zsh &> /dev/null
-then
-	echo "Setting up OhMyZsh"
-	export RUNZSH=no
-	export KEEP_ZSHRC=yes
-	sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-	git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-	echo "OhMyZsh installed and configured, run zsh now"
-fi
+echo "Setting up OhMyZsh"
+export RUNZSH=no
+export KEEP_ZSHRC=yes
+sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+echo "OhMyZsh installed and configured, run zsh now"

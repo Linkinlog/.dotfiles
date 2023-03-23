@@ -28,10 +28,6 @@ if ! command -v nix-env &> /dev/null; then
   sh -c "$(wget -qO- https://nixos.org/nix/install) --daemon --yes"
   export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
   echo "Nix package manager installed."
-  echo "Installing Nix packages..."
-  nix-env -f $HOME/.config/nix/default.nix --install
-  echo "Install complete"
-
 fi
 
 # Start and enable ssh
@@ -44,10 +40,8 @@ echo "Creating ssh key for GitHub..."
 ssh-keygen  -f ~/.ssh/github
 
 # Setup Github
-if command -v gh &> /dev/null; then
-	echo "Setting up GitHub..."
-	gh auth login
-fi
+echo "Setting up GitHub..."
+nix-shell -p gh --run 'gh auth login'
 
 echo "Setting up bare repo's submodules"
 git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
@@ -59,10 +53,8 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively"
 
 # Setup Python3 for nvim and thefuck for zsh
-if command -v python3 &> /dev/null; then
-	echo "Insalling python deps..."
-    pip3 install --user neovim
-fi
+echo "Insalling python deps..."
+nix-shell -p pip3 -c 'pip3 install --user neovim'
 
 
 if command -v zsh &>/dev/null; then
