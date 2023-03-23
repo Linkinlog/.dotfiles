@@ -14,6 +14,7 @@ pkgs.mkShell {
     pkgs.wezterm
     pkgs.ripgrep
     pkgs.zsh
+    pkgs.bash
     pkgs.go
     pkgs.rustup
     pkgs.python3
@@ -38,7 +39,6 @@ pkgs.mkShell {
   ];
   shellHook = ''
     export SHELL=$(which zsh)
-    exec zsh
   '';
 }
 
