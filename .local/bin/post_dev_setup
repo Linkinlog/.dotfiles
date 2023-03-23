@@ -40,7 +40,7 @@ fi
 
 read -p 'Set up zsh?' confirmZsh
 if [[ $confirmZsh =~ ^[Yy]$ ]]; then
-	@command "$(HOME)/.local/bin/zsh_setup"
+	command "$HOME/.local/bin/zsh_setup"
 fi
 
 echo "Local dev setup finished hopefully!"
