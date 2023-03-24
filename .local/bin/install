@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+
+hostname="$1"
+git_email="$2"
+git_user="$3"
+gh_personal_token="$4"
+
+setup_deps() {
+    echo "Installing/Building dependices and tools..."
+    # Package manager dependant install, for simplicity
+    ## Tools
+    TOOLS="ssh gh git xclip docker ripgrep tmux zsh tree-sitter brave-browser i3"
+
+    ## Deps
+    DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3"
+
+    ALLPACKAGES="$DEPS $TOOLS"
+
+    if command -v apt-get >/dev/null 2>&1; then
+        echo "Using apt as package manager and installing..."
+        sudo apt-get install -qy $ALLPACKAGES
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "Using dnf as package manager."
+        # TODO
+        exit 1
+    else
+        echo "No supported package manager found."
+        exit 1
+    fi
+
+    # Building some tools from source
+    ## Installing Go
+    echo "Installing Go 1.20.2"
+    cd
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+    export PATH="$PATH:/usr/local/go/bin"
+    echo "Installing Go tools"
+    go get -u golang.org/x/tools/...
+
+    ## Installing rust
+    echo "Installing Rustup latest"
+    cd
+    curl https://sh.rustup.rs -sSf | sh -s
+
+    ## Install python neovim dependency
+    echo "Insalling python deps..."
+    pip3 install neovim
+
+    ## Install Terminal Emulator (Depends on rust)
+    echo "Installing WezTerm 2023-03-20"
+    cd
+    curl -LO https://github.com/wez/wezterm/releases/download/20230320-124340-559cb7b0/wezterm-20230320-124340-559cb7b0-src.tar.gz
+    tar -xzf wezterm-20230320-124340-559cb7b0-src.tar.gz
+    cd wezterm-20230320-124340-559cb7b0
+    ./get-deps
+    cargo build --release
+    cargo run --release --bin wezterm -- start
+
+    ## Installing lazygit
+    echo "Installing lazygit latest"
+    cd
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+    sudo install lazygit /usr/local/bin
+
+    ## Installing lazydocker
+    cd
+    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+
+    ## Install The Best Code Editor
+    echo "Installing neovim"
+    cd
+    git clone https://github.com/neovim/neovim
+    cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo
+    sudo make install
+
+    ## Setup ohmyzsh
+    echo "Setting up OhMyZsh"
+    export RUNZSH=no
+    export KEEP_ZSHRC=yes
+    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+}
+
+setup_env() {
+    # Set hostname
+    if [ -n "$hostname" ]; then
+        sudo su -c "echo '$hostname' > /etc/hostname"
+        export $HOST="$hostname"
+    fi
+
+    # Set up Git
+    if [ -n "$git_email" ] && [ -n "$git_user" ]; then
+        git config --global user.email "$git_email"
+        git config --global user.name "$git_user"
+    fi
+
+    # Start and enable ssh
+    echo "Starting and enabling ssh..."
+    sudo systemctl start ssh
+    sudo systemctl enable ssh
+
+    # Make new ssh key for gh
+    echo "Creating ssh key for GitHub..."
+    ssh-keygen  -f ~/.ssh/github
+
+    # Setup Github
+    echo "Setting up GitHub..."
+    if [ -n "$gh_personal_token" ]; then
+        gh auth login --with-token "$gh_personal_token"
+        gh ssh-key add $HOME/.ssh/github.pub --title "$HOST"
+    else
+        gh auth login
+    fi
+
+    # Clone and checkout git repo
+    echo "Setting up Git repo"
+    git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout
+    echo "Setting up bare repo's submodules"
+    git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
+
+    echo "Setting up packer / TPM"
+    git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+        ~/.local/share/nvim/site/pack/packer/start/packer.neovim
+        git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+        echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively"
+}
+
+main() {
+    setup_deps
+    setup_env
+}
+
+main
