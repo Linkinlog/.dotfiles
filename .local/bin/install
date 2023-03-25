@@ -34,16 +34,6 @@ setup_deps() {
         exit 1
     fi
 
-    # Building some tools from source
-    ## Installing Go
-    echo "Installing Go 1.20.2"
-    cd
-    wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz
-    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
-    export PATH="$PATH:/usr/local/go/bin"
-    echo "Installing Go tools"
-    go install golang.org/x/tools/...
-
     ## Installing rust
     echo "Installing Rustup latest"
     cd
@@ -59,9 +49,6 @@ setup_deps() {
             ;;
     esac
 
-    ## Installing treesitter
-    cargo install tree-sitter-cli
-
     ## Install Terminal Emulator (Depends on rust)
     echo "Installing WezTerm 2023-03-20"
     cd
@@ -70,7 +57,35 @@ setup_deps() {
     cd wezterm-20230320-124340-559cb7b0
     ./get-deps
     cargo build --release
-    cargo run --release --bin wezterm -- start
+
+    # Building some tools from source
+    ## Installing Go
+    echo "Installing Go 1.20.2"
+    cd
+    wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz
+    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+    export PATH="$PATH:/usr/local/go/bin"
+    echo "Installing Go tools"
+    GO111MODULE=on go install github.com/davidrjenni/reftools/cmd/fillstruct@latest
+    GO111MODULE=on go install mvdan.cc/gofumpt@latest
+    GO111MODULE=on go install github.com/go-delve/delve/cmd/dlv@latest
+    GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    GO111MODULE=on go install github.com/uber/go-torch@latest
+    GO111MODULE=on go install github.com/fatih/gomodifytags@latest
+    GO111MODULE=on go install github.com/josharian/impl@latest
+    GO111MODULE=on go install github.com/golang/mock/mockgen@latest
+    GO111MODULE=on go install github.com/onsi/ginkgo/ginkgo@latest
+    GO111MODULE=on go install github.com/cweill/gotests/gotests@latest
+    GO111MODULE=on go install github.com/rogpeppe/godef@latest
+    GO111MODULE=on go install golang.org/x/tools/cmd/goimports@latest
+    GO111MODULE=on go install golang.org/x/tools/cmd/gorename@latest
+    GO111MODULE=on go install golang.org/x/tools/cmd/guru@latest
+    GO111MODULE=on go install github.com/godoctor/godoctor@latest
+    GO111MODULE=on go install github.com/segmentio/golines@latest
+    GO111MODULE=on go install github.com/alvaroloes/enumer@latest
+
+    ## Installing treesitter
+    cargo install tree-sitter-cli
 
     ## Install python neovim dependency
     echo "Insalling python deps..."
