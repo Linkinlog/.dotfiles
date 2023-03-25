@@ -6,10 +6,15 @@ git_user="$3"
 gh_personal_token="$4"
 
 setup_deps() {
+    ## Setting up brave gpg key
+    sudo wget -O /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+    sudo apt update
+
     echo "Installing/Building dependices and tools..."
     # Package manager dependant install, for simplicity
     ## Tools
-    TOOLS="ssh gh git xclip docker ripgrep tmux zsh tree-sitter brave-browser i3"
+    TOOLS="ssh gh git xclip docker ripgrep tmux zsh brave-browser i3"
 
     ## Deps
     DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3"
@@ -42,9 +47,8 @@ setup_deps() {
     cd
     curl https://sh.rustup.rs -sSf | sh -s
 
-    ## Install python neovim dependency
-    echo "Insalling python deps..."
-    pip3 install neovim
+    ## Installing treesitter
+    cargo install tree-sitter-cli
 
     ## Install Terminal Emulator (Depends on rust)
     echo "Installing WezTerm 2023-03-20"
@@ -55,6 +59,10 @@ setup_deps() {
     ./get-deps
     cargo build --release
     cargo run --release --bin wezterm -- start
+
+    ## Install python neovim dependency
+    echo "Insalling python deps..."
+    pip3 install neovim
 
     ## Installing lazygit
     echo "Installing lazygit latest"
