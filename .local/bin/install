@@ -34,6 +34,9 @@ setup_deps() {
         exit 1
     fi
 
+    # Refresh sudo
+    sudo echo "Refreshing sudo authentication"
+
     ## Installing rust
     echo "Installing Rustup latest"
     cd
@@ -57,6 +60,9 @@ setup_deps() {
     cd wezterm-20230320-124340-559cb7b0
     ./get-deps
     cargo build --release
+
+    # Refresh sudo
+    sudo echo "Refreshing sudo authentication"
 
     # Building some tools from source
     ## Installing Go
@@ -84,6 +90,9 @@ setup_deps() {
     GO111MODULE=on go install github.com/segmentio/golines@latest
     GO111MODULE=on go install github.com/alvaroloes/enumer@latest
 
+    # Refresh sudo
+    sudo echo "Refreshing sudo authentication"
+
     ## Installing treesitter
     cargo install tree-sitter-cli
 
@@ -109,14 +118,6 @@ setup_deps() {
     git clone https://github.com/neovim/neovim
     cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo
     sudo make install
-
-    ## Setup ohmyzsh
-    echo "Setting up OhMyZsh"
-    export RUNZSH=no
-    export KEEP_ZSHRC=yes
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && chsh -s $(which zsh)
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 }
 
 setup_env() {
@@ -148,7 +149,7 @@ setup_env() {
         gh auth login -h github.com
         gh ssh-key add $HOME/.ssh/github.pub --title "$HOST"
     else
-        gh auth login
+        echo -e "\n ****No github token**** \n"
     fi
 
     # Clone and checkout git repo
@@ -158,6 +159,15 @@ setup_env() {
     echo "Setting up bare repo's submodules"
     git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
 
+    ## Setup ohmyzsh
+    echo "Setting up OhMyZsh"
+    export RUNZSH=no
+    export KEEP_ZSHRC=yes
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && chsh -s $(which zsh)
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+    ## Setup Packer / TPM
     echo "Setting up packer / TPM"
     git clone --depth 1 https://github.com/wbthomason/packer.nvim\
         ~/.local/share/nvim/site/pack/packer/start/packer.neovim
