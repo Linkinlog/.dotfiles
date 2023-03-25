@@ -10,15 +10,26 @@ readonly GIT_USER="$3"
 readonly GH_PERSONAL_TOKEN="$4"
 
 ## Tools
-readonly TOOLS="ssh gh git xclip docker ripgrep tmux zsh brave-browser i3"
-readonly DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3 python3-pip bsdutils cmake dpkg-dev fakeroot gcc g++ libegl1-mesa-dev libssl-dev libfontconfig1-dev libwayland-dev libx11-xcb-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-util0-dev lsb-release python3 xdg-utils xorg-dev"
+readonly TOOLS=("ssh" "gh" "git" "xclip" "docker" "ripgrep" "tmux" "zsh" "brave-browser" "i3")
+readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev")
 
 validate() {
     if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
         echo "Usage: $0 <hostname> <git_email> <git_user> <gh_personal_token>"
         exit 1
     fi
+
 }
+
+# Since we use curl, might be good to double check for it
+# Even though we are including it in the deps
+check_curl() {
+    if ! command -v curl >/dev/null 2>&1; then
+        printf "Error: curl command not found. Please install curl and try again.\n"
+        exit 1
+    fi
+}
+
 
 refresh_sudo() {
     sudo echo "Refreshing sudo authentication"
@@ -50,6 +61,7 @@ add_brave_repo() {
 }
 
 install_rust() {
+    check_curl
     curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain nightly -y
     # Add Rust to PATH (taken from .cargo/env)
     case ":${PATH}:" in
@@ -85,11 +97,11 @@ install_wezterm() {
 }
 
 install_go() {
-    local go_version="1.20.2.linux-amd64"
+    local go_version="1.20.2"
     printf "Installing Go version %s" "$go_version"
     cd
-    wget "https://go.dev/dl/go${go_version}.tar.gz"
-    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go${go_version}.tar.gz"
+    wget "https://go.dev/dl/go${go_version}.linux-amd64.tar.gz"
+    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go${go_version}.linux-amd64.tar.gz"
     export PATH="$PATH:/usr/local/go/bin"
 }
 
@@ -141,7 +153,7 @@ install_lazygit() {
 }
 
 install_lazydocker() {
-    ## Installing lazydocker
+    check_curl
     cd
     curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
     printf "Installed Lazydocker \n"
@@ -208,6 +220,7 @@ setup_git_repo() {
 
 setup_ohmyzsh() {
     printf "Setting up OhMyZsh"
+    check_curl
     export RUNZSH=no
     export KEEP_ZSHRC=yes
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
