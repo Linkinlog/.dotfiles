@@ -1,48 +1,57 @@
 #!/usr/bin/env bash
 
-hostname="$1"
-git_email="$2"
-git_user="$3"
-gh_personal_token="$4"
+# Exit if anything fails (has an exit code of 1)
+set -e
 
-setup_deps() {
+# Set arguments
+readonly HOSTNAME="$1"
+readonly GIT_EMAIL="$2"
+readonly GIT_USER="$3"
+readonly GH_PERSONAL_TOKEN="$4"
+
+## Tools
+readonly TOOLS="ssh gh git xclip docker ripgrep tmux zsh brave-browser i3"
+readonly DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3 python3-pip bsdutils cmake dpkg-dev fakeroot gcc g++ libegl1-mesa-dev libssl-dev libfontconfig1-dev libwayland-dev libx11-xcb-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-util0-dev lsb-release python3 xdg-utils xorg-dev"
+
+validate() {
+    if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
+        echo "Usage: $0 <hostname> <git_email> <git_user> <gh_personal_token>"
+        exit 1
+    fi
+}
+
+refresh_sudo() {
+    sudo echo "Refreshing sudo authentication"
+}
+
+install_packages() {
+    local package_manager
+    local package_list=("$@")
+
+    if command -v apt-get >/dev/null 2>&1; then
+        package_manager="apt-get"
+        sudo apt-get update -q
+    elif command -v dnf >/dev/null 2>&1; then
+        package_manager="dnf"
+    else
+        printf "No supported package manager found.\n"
+        exit 1
+    fi
+
+    printf "Using %s as package manager and installing...\n" "$package_manager"
+    sudo "$package_manager" -qy install "${package_list[@]}"
+}
+
+add_brave_repo() {
     ## Setting up brave gpg key
     sudo wget -O /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
     sudo apt update
+}
 
-    echo "Installing/Building dependices and tools..."
-    # Package manager dependant install, for simplicity
-    ## Tools
-    TOOLS="ssh gh git xclip docker ripgrep tmux zsh brave-browser i3"
-
-    ## Deps
-    apt-cache show 'libxcb-util-dev' > /dev/null 2>&1 && XCBUTIL="libxcb-util-dev" || XCBUTIL="libxcb-util0-dev"
-    DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3 python3-pip bsdutils cmake dpkg-dev fakeroot gcc g++ libegl1-mesa-dev libssl-dev libfontconfig1-dev libwayland-dev libx11-xcb-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev "$XCBUTIL" lsb-release python3 xdg-utils xorg-dev"
-
-    ALLPACKAGES="$DEPS $TOOLS"
-
-    if command -v apt-get >/dev/null 2>&1; then
-        echo "Using apt as package manager and installing..."
-        sudo apt-get install -qy $ALLPACKAGES
-    elif command -v dnf >/dev/null 2>&1; then
-        echo "Using dnf as package manager."
-        # TODO
-        exit 1
-    else
-        echo "No supported package manager found."
-        exit 1
-    fi
-
-    # Refresh sudo
-    sudo echo "Refreshing sudo authentication"
-
-    ## Installing rust
-    echo "Installing Rustup latest"
-    cd
+install_rust() {
     curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain nightly -y
-    # rustup shell setup
-    # affix colons on either side of $PATH to simplify matching
+    # Add Rust to PATH (taken from .cargo/env)
     case ":${PATH}:" in
         *:"$HOME/.cargo/bin":*)
             ;;
@@ -51,128 +60,191 @@ setup_deps() {
             export PATH="$HOME/.cargo/bin:$PATH"
             ;;
     esac
+}
 
-    ## Install Terminal Emulator (Depends on rust)
-    echo "Installing WezTerm 2023-03-20"
+install_rust_tools() {
+    if ! command -v cargo >/dev/null 2>&1; then
+        printf "Cargo not found...exiting"
+        exit 1
+    else
+        cargo install tree-sitter-cli
+        printf "tree-sitter-cli installed \n"
+    fi
+}
+
+install_wezterm() {
+    local wezterm_version="20230320-124340-559cb7b0"
+    printf "Installing WezTerm version %s...\n" "$wezterm_version"
+
     cd
-    curl -LO https://github.com/wez/wezterm/releases/download/20230320-124340-559cb7b0/wezterm-20230320-124340-559cb7b0-src.tar.gz
-    tar -xzf wezterm-20230320-124340-559cb7b0-src.tar.gz
-    cd wezterm-20230320-124340-559cb7b0
+    curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}-src.tar.gz"
+    tar -xzf "wezterm-${wezterm_version}-src.tar.gz"
+    cd "wezterm-${wezterm_version}"
     ./get-deps
     cargo build --release
+}
 
-    # Refresh sudo
-    sudo echo "Refreshing sudo authentication"
-
-    # Building some tools from source
-    ## Installing Go
-    echo "Installing Go 1.20.2"
+install_go() {
+    local go_version="1.20.2.linux-amd64"
+    printf "Installing Go version %s" "$go_version"
     cd
-    wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz
-    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+    wget "https://go.dev/dl/go${go_version}.tar.gz"
+    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go${go_version}.tar.gz"
     export PATH="$PATH:/usr/local/go/bin"
-    echo "Installing Go tools"
-    GO111MODULE=on go install github.com/davidrjenni/reftools/cmd/fillstruct@latest
-    GO111MODULE=on go install mvdan.cc/gofumpt@latest
-    GO111MODULE=on go install github.com/go-delve/delve/cmd/dlv@latest
-    GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-    GO111MODULE=on go install github.com/uber/go-torch@latest
-    GO111MODULE=on go install github.com/fatih/gomodifytags@latest
-    GO111MODULE=on go install github.com/josharian/impl@latest
-    GO111MODULE=on go install github.com/golang/mock/mockgen@latest
-    GO111MODULE=on go install github.com/onsi/ginkgo/ginkgo@latest
-    GO111MODULE=on go install github.com/cweill/gotests/gotests@latest
-    GO111MODULE=on go install github.com/rogpeppe/godef@latest
-    GO111MODULE=on go install golang.org/x/tools/cmd/goimports@latest
-    GO111MODULE=on go install golang.org/x/tools/cmd/gorename@latest
-    GO111MODULE=on go install golang.org/x/tools/cmd/guru@latest
-    GO111MODULE=on go install github.com/godoctor/godoctor@latest
-    GO111MODULE=on go install github.com/segmentio/golines@latest
-    GO111MODULE=on go install github.com/alvaroloes/enumer@latest
+}
 
-    # Refresh sudo
-    sudo echo "Refreshing sudo authentication"
+install_go_tools() {
+    if command -v go >/dev/null 2>&1; then
+        local go_tools=(
+        "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
+        "github.com/go-delve/delve/cmd/dlv@latest"
+        "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+        "github.com/uber/go-torch@latest"
+        "github.com/fatih/gomodifytags@latest"
+        "github.com/josharian/impl@latest"
+        "github.com/golang/mock/mockgen@latest"
+        "github.com/onsi/ginkgo/ginkgo@latest"
+        "github.com/cweill/gotests/gotests@latest"
+        "github.com/rogpeppe/godef@latest"
+        "github.com/godoctor/godoctor@latest"
+        "github.com/segmentio/golines@latest"
+        "github.com/alvaroloes/enumer@latest"
+        "golang.org/x/tools/cmd/goimports@latest"
+        "golang.org/x/tools/cmd/gorename@latest"
+        "golang.org/x/tools/cmd/guru@latest"
+        "mvdan.cc/gofumpt@latest"
+    )
 
-    ## Installing treesitter
-    cargo install tree-sitter-cli
+    for tool in "${go_tools[@]}"; do
+        GO111MODULE=on go install "$tool"
+    done
+    fi
+}
 
-    ## Install python neovim dependency
-    echo "Insalling python deps..."
-    pip3 install neovim
+install_terminal_tools() {
 
-    ## Installing lazygit
-    echo "Installing lazygit latest"
+    printf "Setting up packer / TPM"
+    git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+        ~/.local/share/nvim/site/pack/packer/start/packer.neovim
+
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively \n"
+}
+
+install_lazygit() {
     cd
     LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
     tar xf lazygit.tar.gz lazygit
     sudo install lazygit /usr/local/bin
+    printf "Installed Lazygit \n"
+}
 
+install_lazydocker() {
     ## Installing lazydocker
     cd
     curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+    printf "Installed Lazydocker \n"
+}
 
-    ## Install The Best Code Editor
-    echo "Installing neovim"
+install_neovim() {
     cd
     git clone https://github.com/neovim/neovim
     cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo
     sudo make install
+    printf "Installed neovim \n"
+}
+
+install_neovim_tools() {
+    if ! command -v pip3 >/dev/null 2>&1; then
+        printf "Pip3 not found...exiting"
+        exit 1
+    else
+        pip3 install neovim
+        printf "Installed python-neovim \n"
+    fi
+}
+
+set_hostname() {
+    if [ "$HOSTNAME" != "" ]; then
+        sudo su -c "echo '$HOSTNAME' > /etc/hostname"
+        export HOST=$HOSTNAME
+        printf "Hostname set to %s \n" "$HOSTNAME"
+    fi
+}
+
+config_git() {
+    git config --global user.email "$GIT_EMAIL"
+    git config --global user.name "$GIT_USER"
+    printf "Git configured to use %s as email and %s as user \n" "$GIT_EMAIL" "$GIT_USER"
+}
+
+start_enable_ssh() {
+    sudo systemctl start ssh
+    sudo systemctl enable ssh
+    printf "SSH started and enabled"
+}
+
+setup_github() {
+    printf "Setting up GitHub...\n"
+    printf "Adding Token %s" "$GH_PERSONAL_TOKEN"
+    export GITHUB_TOKEN=$GH_PERSONAL_TOKEN
+    gh auth login -h github.com
+
+    # Make new ssh key for gh
+    printf "Creating ssh key for GitHub for %s...\n" "$HOST"
+    ssh-keygen -f ~/.ssh/github -N ""
+
+    gh ssh-key add "$HOME/.ssh/github.pub" --title "$HOST"
+}
+
+setup_git_repo() {
+    printf "Setting up Git repo"
+    git clone --bare https://github.com/linkinlog/.dotfiles "$HOME/.dotfiles"
+    git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" checkout
+    printf "Setting up bare repo's submodules"
+    git --git-dir="$HOME/.dotfiles/" --work-tree="$HOME" submodule update --init --remote
+}
+
+setup_ohmyzsh() {
+    printf "Setting up OhMyZsh"
+    export RUNZSH=no
+    export KEEP_ZSHRC=yes
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+        "" --unattended && chsh -s "$(which zsh)"
+
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
+        "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+
+    git clone https://github.com/zsh-users/zsh-autosuggestions \
+        "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    printf "OhMyZsh installed"
+}
+
+setup_deps() {
+    validate
+    refresh_sudo
+    add_brave_repo
+    install_packages "${DEPS[@]}" "${TOOLS[@]}"
 }
 
 setup_env() {
-    # Set hostname
-    if [ -n "$hostname" ]; then
-        sudo su -c "echo '$hostname' > /etc/hostname"
-        export HOST="$hostname"
-    fi
-
-    # Set up Git
-    if [ -n "$git_email" ] && [ -n "$git_user" ]; then
-        git config --global user.email "$git_email"
-        git config --global user.name "$git_user"
-    fi
-
-    # Start and enable ssh
-    echo "Starting and enabling ssh..."
-    sudo systemctl start ssh
-    sudo systemctl enable ssh
-
-    # Make new ssh key for gh
-    echo "Creating ssh key for GitHub..."
-    ssh-keygen  -f ~/.ssh/github -N ""
-
-    # Setup Github
-    echo "Setting up GitHub..."
-    if [ -n "$gh_personal_token" ]; then
-        export GITHUB_TOKEN="$gh_personal_token"
-        gh auth login -h github.com
-        gh ssh-key add $HOME/.ssh/github.pub --title "$HOST"
-    else
-        echo -e "\n ****No github token**** \n"
-    fi
-
-    # Clone and checkout git repo
-    echo "Setting up Git repo"
-    git clone --bare https://github.com/linkinlog/.dotfiles $HOME/.dotfiles
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout
-    echo "Setting up bare repo's submodules"
-    git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME submodule update --init --remote
-
-    ## Setup ohmyzsh
-    echo "Setting up OhMyZsh"
-    export RUNZSH=no
-    export KEEP_ZSHRC=yes
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && chsh -s $(which zsh)
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-
-    ## Setup Packer / TPM
-    echo "Setting up packer / TPM"
-    git clone --depth 1 https://github.com/wbthomason/packer.nvim\
-        ~/.local/share/nvim/site/pack/packer/start/packer.neovim
-        git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-        echo "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively"
+    set_hostname
+    config_git
+    start_enable_ssh
+    install_go
+    install_go_tools
+    install_lazydocker
+    install_lazygit
+    install_neovim
+    install_neovim_tools
+    install_rust
+    install_rust_tools
+    install_wezterm
+    install_terminal_tools
+    setup_github
+    setup_git_repo
+    setup_ohmyzsh
 }
 
 main() {
@@ -180,4 +252,4 @@ main() {
     setup_env
 }
 
-main
+main "$@"
