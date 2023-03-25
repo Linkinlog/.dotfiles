@@ -17,7 +17,8 @@ setup_deps() {
     TOOLS="ssh gh git xclip docker ripgrep tmux zsh brave-browser i3"
 
     ## Deps
-    DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3"
+    apt-cache show 'libxcb-util-dev' > /dev/null 2>&1 && XCBUTIL="libxcb-util-dev" || XCBUTIL="libxcb-util0-dev"
+    DEPS="ninja-build gettext libtool-bin cmake g++ pkg-config unzip curl python3 python3-pip bsdutils cmake dpkg-dev fakeroot gcc g++ libegl1-mesa-dev libssl-dev libfontconfig1-dev libwayland-dev libx11-xcb-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev "$XCBUTIL" lsb-release python3 xdg-utils xorg-dev"
 
     ALLPACKAGES="$DEPS $TOOLS"
 
@@ -41,7 +42,7 @@ setup_deps() {
     rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
     export PATH="$PATH:/usr/local/go/bin"
     echo "Installing Go tools"
-    go get -u golang.org/x/tools/...
+    go install golang.org/x/tools/...
 
     ## Installing rust
     echo "Installing Rustup latest"
