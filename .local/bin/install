@@ -107,6 +107,7 @@ install_wezterm() {
     cd "wezterm-${wezterm_version}"
     ./get-deps
     cargo build --release
+    sudo cp target/release/wezterm /usr/local/bin
 }
 
 install_go() {
@@ -284,19 +285,22 @@ setup_env() {
     set_hostname
     config_git
     start_enable_ssh
+    refresh_sudo
     install_go
     install_go_tools
     install_lazydocker
     install_lazygit
+    refresh_sudo
     install_neovim
     install_neovim_tools
     install_rust
     install_rust_tools
-    install_wezterm
     install_terminal_tools
     setup_github
     setup_git_repo
     setup_ohmyzsh
+    refresh_sudo
+    install_wezterm
 }
 
 main() {
