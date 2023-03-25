@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# This script sets up a development environment for a Linux-based system.
+# It installs and configures various tools, packages, and configurations
+# necessary for a comfortable and efficient development experience.
+# Written by: https://github.com/linkinlog
+
 # Exit if anything fails (has an exit code of 1)
 set -e
 
@@ -32,7 +37,8 @@ check_curl() {
 
 
 refresh_sudo() {
-    sudo echo "Refreshing sudo authentication"
+    printf "Refreshing sudo authentication"
+    sudo -v
 }
 
 install_packages() {
@@ -44,6 +50,12 @@ install_packages() {
         sudo apt-get update -q
     elif command -v dnf >/dev/null 2>&1; then
         package_manager="dnf"
+    elif command -v pacman >/dev/null 2>&1; then
+        package_manager="pacman"
+        sudo pacman -Sy
+    elif command -v zypper >/dev/null 2>&1; then
+        package_manager="zypper"
+        sudo zypper refresh
     else
         printf "No supported package manager found.\n"
         exit 1
@@ -62,7 +74,7 @@ add_brave_repo() {
 
 install_rust() {
     check_curl
-    curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain nightly -y
+    curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y
     # Add Rust to PATH (taken from .cargo/env)
     case ":${PATH}:" in
         *:"$HOME/.cargo/bin":*)
@@ -85,7 +97,8 @@ install_rust_tools() {
 }
 
 install_wezterm() {
-    local wezterm_version="20230320-124340-559cb7b0"
+    local wezterm_version
+    wezterm_version=$(curl -s "https://api.github.com/repos/wez/wezterm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
     printf "Installing WezTerm version %s...\n" "$wezterm_version"
 
     cd
@@ -134,12 +147,23 @@ install_go_tools() {
 }
 
 install_terminal_tools() {
+    local packer_repo="https://github.com/wbthomason/packer.nvim"
+    local packer_dir="$HOME/.local/share/nvim/site/pack/packer/start/packer.neovim"
+    local tpm_repo="https://github.com/tmux-plugins/tpm"
+    local tpm_dir="$HOME/.tmux/plugins/tpm"
 
-    printf "Setting up packer / TPM"
-    git clone --depth 1 https://github.com/wbthomason/packer.nvim\
-        ~/.local/share/nvim/site/pack/packer/start/packer.neovim
+    if [ -d "$packer_dir" ]; then
+        git -C "$packer_dir" pull
+    else
+        git clone --depth 1 "$packer_repo" "$packer_dir"
+    fi
 
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    if [ -d "$tpm_dir" ]; then
+        git -C "$tpm_dir" pull
+    else
+        git clone "$tpm_repo" "$tpm_dir"
+    fi
+
     printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively \n"
 }
 
@@ -155,8 +179,11 @@ install_lazygit() {
 install_lazydocker() {
     check_curl
     cd
-    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
-    printf "Installed Lazydocker \n"
+    if curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash; then
+        printf "Installed Lazydocker \n"
+    else
+        printf "Error: Failed to install Lazydocker\n"
+    fi
 }
 
 install_neovim() {
@@ -200,8 +227,8 @@ start_enable_ssh() {
 setup_github() {
     printf "Setting up GitHub...\n"
     printf "Adding Token %s" "$GH_PERSONAL_TOKEN"
-    export GITHUB_TOKEN=$GH_PERSONAL_TOKEN
-    gh auth login -h github.com
+
+    gh auth login --with-token <<< "$GH_PERSONAL_TOKEN"
 
     # Make new ssh key for gh
     printf "Creating ssh key for GitHub for %s...\n" "$HOST"
@@ -219,19 +246,31 @@ setup_git_repo() {
 }
 
 setup_ohmyzsh() {
-    printf "Setting up OhMyZsh"
-    check_curl
-    export RUNZSH=no
-    export KEEP_ZSHRC=yes
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-        "" --unattended && chsh -s "$(which zsh)"
+    printf "Setting up OhMyZsh\n"
 
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
-        "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    if [ ! -d "$HOME/.oh-my-zsh" ]; then
+        check_curl
+        export RUNZSH=no
+        export KEEP_ZSHRC=yes
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+            "" --unattended && chsh -s "$(which zsh)"
+    else
+        git -C "$HOME/.oh-my-zsh" pull
+    fi
 
-    git clone https://github.com/zsh-users/zsh-autosuggestions \
-        "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
-    printf "OhMyZsh installed"
+    local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    if [ -d "$zsh_syntax_highlighting_path" ]; then
+        git -C "$zsh_syntax_highlighting_path" pull
+    else
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path"
+    fi
+
+    local zsh_autosuggestions_path="${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    if [ -d "$zsh_autosuggestions_path" ]; then
+        git -C "$zsh_autosuggestions_path" pull
+    else
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path"
+    fi
 }
 
 setup_deps() {
