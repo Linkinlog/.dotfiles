@@ -38,7 +38,7 @@ setup_deps() {
     echo "Installing Go 1.20.2"
     cd
     wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz
-    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
     export PATH="$PATH:/usr/local/go/bin"
     echo "Installing Go tools"
     go get -u golang.org/x/tools/...
@@ -47,7 +47,16 @@ setup_deps() {
     echo "Installing Rustup latest"
     cd
     curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain nightly -y
-    source $HOME/.cargo/env
+    # rustup shell setup
+    # affix colons on either side of $PATH to simplify matching
+    case ":${PATH}:" in
+        *:"$HOME/.cargo/bin":*)
+            ;;
+        *)
+            # Prepending path in case a system-installed rustc needs to be overridden
+            export PATH="$HOME/.cargo/bin:$PATH"
+            ;;
+    esac
 
     ## Installing treesitter
     cargo install tree-sitter-cli
@@ -89,7 +98,7 @@ setup_deps() {
     echo "Setting up OhMyZsh"
     export RUNZSH=no
     export KEEP_ZSHRC=yes
-    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended && chsh -s $(which zsh)
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && chsh -s $(which zsh)
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 }
@@ -119,7 +128,8 @@ setup_env() {
     # Setup Github
     echo "Setting up GitHub..."
     if [ -n "$gh_personal_token" ]; then
-        gh auth login --with-token "$gh_personal_token"
+        export GITHUB_TOKEN="$gh_personal_token"
+        gh auth login -h github.com
         gh ssh-key add $HOME/.ssh/github.pub --title "$HOST"
     else
         gh auth login
