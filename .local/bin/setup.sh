@@ -302,7 +302,7 @@ setup_git_repo() {
     local dotfiles_repo="https://github.com/linkinlog/.dotfiles"
     local dotfiles_dir="$HOMEDIR/.dotfiles"
 
-    if [ -d "$neovim_dir" ]; then
+    if [ -d "$dotfiles_dir" ]; then
         git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull
     else
         git clone --bare "$dotfiles_repo" "$dotfiles_dir"
