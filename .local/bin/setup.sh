@@ -352,7 +352,7 @@ setup_ohmyzsh() {
         export KEEP_ZSHRC=yes
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
             "" --unattended || { printf "Error: could not install OhMyZsh \n\n"; exit 1; }
-        chsh -s "$(which zsh)"
+        sudo chsh -s "$(which zsh)" -u "$(whoami)"
     else
         git -C "$HOMEDIR/.oh-my-zsh" pull > /dev/null
     fi
