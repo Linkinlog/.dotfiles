@@ -3,6 +3,8 @@
 # This script sets up a development environment for a Linux-based system.
 # It installs and configures various tools, packages, and configurations
 # necessary for a comfortable and efficient development experience.
+#
+# Currently only supported on ubuntu and ubuntu derivitives, built for 22.04
 # Written by: https://github.com/linkinlog
 
 # Exit if anything fails (has an exit code of 1)
@@ -98,16 +100,12 @@ install_rust_tools() {
 
 install_wezterm() {
     local wezterm_version
+    local release
     wezterm_version=$(curl -s "https://api.github.com/repos/wez/wezterm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
+    release=$(lsb_release -rs)
     printf "Installing WezTerm version %s...\n" "$wezterm_version"
-
-    cd
-    curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}-src.tar.gz"
-    tar -xzf "wezterm-${wezterm_version}-src.tar.gz"
-    cd "wezterm-${wezterm_version}"
-    ./get-deps
-    cargo build --release
-    sudo cp target/release/wezterm /usr/local/bin
+    curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb"
+    sudo apt install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb"
 }
 
 install_go() {
