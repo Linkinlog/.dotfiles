@@ -339,7 +339,7 @@ setup_git_repo() {
     fi
     git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout > /dev/null
     printf "Setting up bare repo's submodules \n\n"
-    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote > /dev/null
+    GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote > /dev/null
     printf ".dotfiles repo setup finished. Continuing...\n\n"
 }
 
