@@ -101,7 +101,7 @@ install_packages() {
 add_brave_repo() {
     sudo wget -O /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-    sudo apt update
+    sudo apt-get update
 }
 
 # Use Rustup to install Rust stable
@@ -138,7 +138,7 @@ install_wezterm() {
     release=$(lsb_release -rs)
     printf "Installing WezTerm version %s...\n" "$wezterm_version"
     curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb"
-    sudo apt install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb"
+    sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb"
 }
 
 # Installing Go from source and deleting old copies
