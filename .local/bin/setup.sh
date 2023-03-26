@@ -278,7 +278,7 @@ start_enable_ssh() {
 setup_github() {
     printf "Setting up GitHub...\n\n"
 
-    if ! gh auth status; then
+    if ! gh auth status >/dev/null 2>&1; then
         printf "Adding Token %s \n\n" "$GH_PERSONAL_TOKEN"
         gh auth login --with-token <<< "$GH_PERSONAL_TOKEN"
     fi
@@ -289,7 +289,7 @@ setup_github() {
         ssh-keygen -f ~/.ssh/github -N ""
     fi
 
-    if ! gh ssh-key list; then
+    if ! gh ssh-key list >/dev/null 2>&1; then
         printf "Adding ssh key to github"
         gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
     fi
