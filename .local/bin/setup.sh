@@ -320,9 +320,6 @@ setup_github() {
         # Make new ssh key for gh
         printf "Creating ssh key for GitHub for %s...\n\n" "$HOST"
         ssh-keygen -f ~/.ssh/github -N ""
-    fi
-
-    if ! gh ssh-key list >/dev/null 2>&1; then
         printf "Adding ssh key to github"
         gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
     fi
