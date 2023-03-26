@@ -21,29 +21,58 @@ readonly HOMEDIR="$HOME"
 readonly TOOLS=("ssh" "gh" "git" "xclip" "docker" "ripgrep" "tmux" "zsh" "brave-browser" "i3")
 readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev")
 
+# Make sure all variables and dependencies exist
 validate() {
     if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
-        echo "Usage: $0 <hostname> <git_email> <git_user> <gh_personal_token>"
+        printf "Usage: %s <hostname> <git_email> <git_user> <gh_personal_token>" "$0"
         exit 1
     fi
-
-}
-
-# Since we use curl, might be good to double check for it
-# Even though we are including it in the deps
-check_curl() {
+    # Since we use curl, might be good to double check for it
+    # Even though we are including it in the deps
     if ! command -v curl >/dev/null 2>&1; then
         printf "Error: curl command not found. Please install curl and try again.\n"
         exit 1
     fi
+
+}
+
+# Ensure all dependencies are here after installation
+check_dependencies() {
+    if ! git --version >/dev/null 2>&1; then
+        printf "Git is not installed. Please install Git and try again."
+        exit 1
+    fi
+
+    if ! curl --version >/dev/null 2>&1; then
+        printf "Curl is not installed. Please install Curl and try again."
+        exit 1
+    fi
+
+    if ! wget --version >/dev/null 2>&1; then
+        printf "Wget is not installed. Please install Wget and try again."
+        exit 1
+    fi
+
+    if ! unzip -v >/dev/null 2>&1; then
+        printf "Unzip is not installed. Please install Unzip and try again."
+        exit 1
+    fi
+
+    if ! dpkg -s build-essential >/dev/null 2>&1; then
+        printf "Build-essential is not installed. Please install Build-essential and try again."
+        exit 1
+    fi
 }
 
 
+# Refresh sudo auth so we can ask for password less
 refresh_sudo() {
-    printf "Refreshing sudo authentication"
+    printf "Refreshing sudo authentication... \n"
     sudo -v
 }
 
+# Installs whatever package list is passed in
+# @param Array package_list
 install_packages() {
     local package_manager
     local package_list=("$@")
@@ -68,15 +97,15 @@ install_packages() {
     sudo "$package_manager" -qy install "${package_list[@]}"
 }
 
+## Setting up brave gpg key
 add_brave_repo() {
-    ## Setting up brave gpg key
     sudo wget -O /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
     sudo apt update
 }
 
+# Use Rustup to install Rust stable
 install_rust() {
-    check_curl
     curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y
     # Add Rust to PATH (taken from .cargo/env)
     case ":${PATH}:" in
@@ -89,6 +118,8 @@ install_rust() {
     esac
 }
 
+# Installing various cargo tools
+# for now just tree-sitter.
 install_rust_tools() {
     if ! command -v cargo >/dev/null 2>&1; then
         printf "Cargo not found...exiting"
@@ -99,6 +130,7 @@ install_rust_tools() {
     fi
 }
 
+# Installing our terminal emulator, wezterm
 install_wezterm() {
     local wezterm_version
     local release
@@ -109,15 +141,17 @@ install_wezterm() {
     sudo apt install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb"
 }
 
+# Installing Go from source and deleting old copies
 install_go() {
-    local go_version="1.20.2"
+    local go_version
+    go_version=$(curl -sSL "https://golang.org/VERSION?m=text")
     printf "Installing Go version %s" "$go_version"
-    cd
     wget "https://go.dev/dl/go${go_version}.linux-amd64.tar.gz"
-    rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go${go_version}.linux-amd64.tar.gz"
+    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go${go_version}.linux-amd64.tar.gz"
     export PATH="$PATH:/usr/local/go/bin"
 }
 
+# Install all recommended Go tools
 install_go_tools() {
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
@@ -146,6 +180,8 @@ install_go_tools() {
     fi
 }
 
+# We use packer for plugin management in Neovim, so install that.
+# We use TPM for plugin management in Tmux, so install that.
 install_terminal_tools() {
     local packer_repo="https://github.com/wbthomason/packer.nvim"
     local packer_dir="$HOMEDIR/.local/share/nvim/site/pack/packer/start/packer.neovim"
@@ -167,18 +203,19 @@ install_terminal_tools() {
     printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively \n"
 }
 
+# Lazygit makes working with Git in the CLI much nicer, so install it.
 install_lazygit() {
-    cd
     LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" \
+        || { printf "Failed cURL'ing lazygit \n"; exit 1; }
     tar xf lazygit.tar.gz lazygit
     sudo install lazygit /usr/local/bin
     printf "Installed Lazygit \n"
 }
 
+
+# Lazydocker makes working with Docker in the CLI much nicer, so install it.
 install_lazydocker() {
-    check_curl
-    cd
     if curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash; then
         printf "Installed Lazydocker \n"
     else
@@ -186,14 +223,15 @@ install_lazydocker() {
     fi
 }
 
+# I cant write code without vim, apologies
 install_neovim() {
-    cd
     git clone https://github.com/neovim/neovim
     cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo
-    sudo make install
+    sudo make install || { printf "Error: failed installing neovim \n"; exit 1; }
     printf "Installed neovim \n"
 }
 
+# :checkhealth says I need python I guess
 install_neovim_tools() {
     if ! command -v pip3 >/dev/null 2>&1; then
         printf "Pip3 not found...exiting"
@@ -204,6 +242,7 @@ install_neovim_tools() {
     fi
 }
 
+# Change the hostname to whatever was set
 set_hostname() {
     if [ "$HOSTNAME" != "" ]; then
         sudo su -c "echo '$HOSTNAME' > /etc/hostname"
@@ -212,18 +251,22 @@ set_hostname() {
     fi
 }
 
+# Configure local git
 config_git() {
     git config --global user.email "$GIT_EMAIL"
     git config --global user.name "$GIT_USER"
     printf "Git configured to use %s as email and %s as user \n" "$GIT_EMAIL" "$GIT_USER"
 }
 
+# Use systemd to start and enable ssh so we can connect
 start_enable_ssh() {
     sudo systemctl start ssh
     sudo systemctl enable ssh
     printf "SSH started and enabled"
 }
 
+# Take the personal token that was made, auth with it, and add the ssh key
+# Necessary since we use git submodules with SSH
 setup_github() {
     printf "Setting up GitHub...\n"
     printf "Adding Token %s" "$GH_PERSONAL_TOKEN"
@@ -237,23 +280,25 @@ setup_github() {
     gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
 }
 
+# Heres the meat and potatoes, our bare repo will be unpacked
 setup_git_repo() {
-    printf "Setting up Git repo"
+    printf "Setting up Git repo \n"
     git clone --bare https://github.com/linkinlog/.dotfiles "$HOMEDIR/.dotfiles"
     git --git-dir="$HOMEDIR/.dotfiles" --work-tree="$HOMEDIR" checkout
-    printf "Setting up bare repo's submodules"
+    printf "Setting up bare repo's submodules \n"
     git --git-dir="$HOMEDIR/.dotfiles" --work-tree="$HOMEDIR" submodule update --init --remote
 }
 
+# Mainly just for the theme, hoping to phase out at some point
 setup_ohmyzsh() {
     printf "Setting up OhMyZsh\n"
 
     if [ ! -d "$HOMEDIR/.oh-my-zsh" ]; then
-        check_curl
         export RUNZSH=no
         export KEEP_ZSHRC=yes
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-            "" --unattended && chsh -s "$(which zsh)"
+            "" --unattended || { printf "Error: could not install OhMyZsh \n"; exit 1; }
+        chsh -s "$(which zsh)"
     else
         git -C "$HOMEDIR/.oh-my-zsh" pull
     fi
@@ -262,49 +307,53 @@ setup_ohmyzsh() {
     if [ -d "$zsh_syntax_highlighting_path" ]; then
         git -C "$zsh_syntax_highlighting_path" pull
     else
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path"
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || { printf "Error: could not clone zsh-syntax-highlighting \n"; exit 1;}
     fi
 
     local zsh_autosuggestions_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     if [ -d "$zsh_autosuggestions_path" ]; then
         git -C "$zsh_autosuggestions_path" pull
     else
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path"
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || { printf "Error: could not clone zsh-autosuggestions \n"; exit 1;}
     fi
 }
 
-setup_deps() {
+
+# Group the dependency commands together
+install_dependencies() {
     validate
-    refresh_sudo
     add_brave_repo
     install_packages "${DEPS[@]}" "${TOOLS[@]}"
+    check_dependencies
 }
 
-setup_env() {
+# Group the env setup commands together
+configure_environment() {
     set_hostname
     config_git
     start_enable_ssh
     refresh_sudo
-    install_go
-    install_go_tools
-    install_lazydocker
-    install_lazygit
+    (install_go)
+    (install_go_tools)
+    (install_lazydocker)
+    (install_lazygit)
     refresh_sudo
-    install_neovim
-    install_neovim_tools
-    install_rust
-    install_rust_tools
-    install_terminal_tools
-    setup_github
-    setup_git_repo
-    setup_ohmyzsh
+    (install_neovim)
+    (install_neovim_tools)
+    (install_rust)
+    (install_rust_tools)
+    (install_terminal_tools)
+    (setup_github)
+    (setup_git_repo)
+    (setup_ohmyzsh)
     refresh_sudo
-    install_wezterm
+    (install_wezterm)
 }
 
+# Run it all and only care about STDERR
 main() {
-    setup_deps
-    setup_env
+    install_dependencies > /dev/null
+    configure_environment > /dev/null
 }
 
 main "$@"
