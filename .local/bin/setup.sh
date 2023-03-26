@@ -23,6 +23,7 @@ readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" 
 
 # Make sure all variables and dependencies exist
 validate() {
+    printf "Validating arguments...\n\n"
     if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
         printf "Usage: %s <hostname> <git_email> <git_user> <gh_personal_token> \n\n" "$0"
         exit 1
@@ -33,11 +34,12 @@ validate() {
         printf "Error: curl command not found. Please install curl and try again.\n\n"
         exit 1
     fi
-
+    printf "Validated. Continuing...\n\n"
 }
 
 # Ensure all dependencies are here after installation
 check_dependencies() {
+    printf "Checking dependencies...\n\n"
     if ! git --version >/dev/null 2>&1; then
         printf "Git is not installed. Please install Git and try again.\n\n"
         exit 1
@@ -62,6 +64,7 @@ check_dependencies() {
         printf "Build-essential is not installed. Please install Build-essential and try again.\n\n"
         exit 1
     fi
+    printf "All dependencies set. Continuing...\n\n"
 }
 
 
@@ -77,9 +80,10 @@ install_packages() {
     local package_manager
     local package_list=("$@")
 
+    printf "Determining package manager... \n\n"
     if command -v apt-get >/dev/null 2>&1; then
         package_manager="apt-get"
-        sudo apt-get update -q
+        sudo apt-get update -q > /dev/null
     elif command -v dnf >/dev/null 2>&1; then
         package_manager="dnf"
     elif command -v pacman >/dev/null 2>&1; then
@@ -94,33 +98,45 @@ install_packages() {
     fi
 
     printf "Using %s as package manager and installing...\n\n" "$package_manager"
-    sudo "$package_manager" -qy install "${package_list[@]}"
+    sudo "$package_manager" -qy install "${package_list[@]}" > /dev/null
+    printf "All packages installed. Continuing...\n\n"
 }
 
 ## Setting up brave gpg key
 add_brave_repo() {
-    sudo wget -O /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-    sudo apt-get update
+    printf "Adding Brave GPG key if needed...\n\n"
+    local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    local gpg_output=/usr/share/keyrings/brave-browser-archive-keyring.gpg
+    if output=$(sudo wget -O $gpg_output $brave_gpg  2>&1); then
+        echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo bash -c 'cat > /etc/apt/sources.list.d/brave-browser-release.list'
+    else
+        printf "Error occurred: %s\n" "$output"
+        exit 1
+    fi
+    printf "Brave all set to be installed. Continuing...\n\n"
 }
 
 # Use Rustup to install Rust stable
 install_rust() {
-    curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y
+    printf "Installing Rust stable with Rustup...\n\n"
+    curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y > /dev/null
+    printf "Rust stable installed. Continuing...\n\n"
 }
 
 # Installing various cargo tools
 # for now just tree-sitter.
 install_rust_tools() {
+    printf "Installing tools that need cargo...\n\n"
     # Add Rust to PATH (taken from .cargo/env)
     export PATH="$HOMEDIR/.cargo/bin:$PATH"
     if ! command -v cargo >/dev/null 2>&1; then
         printf "Cargo not found...exiting\n\n"
         exit 1
     else
-        cargo install tree-sitter-cli
+        cargo install tree-sitter-cli > /dev/null
         printf "tree-sitter-cli installed \n\n"
     fi
+    printf "Cargo tools installed. Continuing...\n\n"
 }
 
 # Installing our terminal emulator, wezterm
@@ -130,29 +146,42 @@ install_wezterm() {
     wezterm_version=$(curl -s "https://api.github.com/repos/wez/wezterm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
     release=$(lsb_release -rs)
     printf "Installing WezTerm version %s...\n\n" "$wezterm_version"
-    curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb"
-    sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb"
+    if output=$(curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb" 2>&1); then
+        sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb" > /dev/null
+    else
+        printf "Error occured: %s\n" "$output"
+    fi
+    printf "Wezterm installed. Continuing...\n\n"
 }
 
 # Installing Go from source and deleting old copies
 install_go() {
     local go_version
-    local go_install
+    local arch
+    local go_install_path
     go_version=$(curl -sSL "https://golang.org/VERSION?m=text")
-    go_install="$HOME/${go_version}.linux-amd64.tar.gz"
+    arch="linux-amd64"
+    go_install_path="$HOME/${go_version}.${arch}.tar.gz"
     if [[ "$(go version | awk '{print $3}')" == "go${go_version}" ]]; then
         printf "Go version %s is already installed\n\n" "$go_version"
         return
-    else
-        printf "Installing Go version %s to %s\n\n" "$go_version" "$go_install"
-        wget -O "$go_install"  "https://go.dev/dl/${go_version}.linux-amd64.tar.gz"
-        sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "${go_version}.linux-amd64.tar.gz"
     fi
+
+    if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
+        printf "Installing Go version %s to %s\n\n" "$go_version" "$go_install_path"
+        sudo rm -rf /usr/local/go && 
+        sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
+    else
+        printf "Error occurred: %s\n" "$output"
+        exit 1
+    fi
+    printf "Go installed. Continuing...\n\n"
     export PATH="$PATH:/usr/local/go/bin"
 }
 
 # Install all recommended Go tools
 install_go_tools() {
+    printf "Installing Go tools...\n\n"
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
         "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
@@ -175,9 +204,10 @@ install_go_tools() {
     )
 
     for tool in "${go_tools[@]}"; do
-        GO111MODULE=on go install "$tool"
+        GO111MODULE=on go install "$tool" > /dev/null
     done
     fi
+    printf "Go tools installed. Continuing...\n\n"
 }
 
 # We use packer for plugin management in Neovim, so install that.
@@ -188,55 +218,64 @@ install_terminal_tools() {
     local tpm_repo="https://github.com/tmux-plugins/tpm"
     local tpm_dir="$HOMEDIR/.tmux/plugins/tpm"
 
+    printf "Installing TPM and Packer...\n\n"
+
     if [ -d "$packer_dir" ]; then
-        git -C "$packer_dir" pull
+        git -C "$packer_dir" pull > /dev/null
     else
-        git clone --depth 1 "$packer_repo" "$packer_dir"
+        git clone --depth 1 "$packer_repo" "$packer_dir" > /dev/null
     fi
 
     if [ -d "$tpm_dir" ]; then
-        git -C "$tpm_dir" pull
+        git -C "$tpm_dir" pull > /dev/null
     else
-        git clone "$tpm_repo" "$tpm_dir"
+        git clone "$tpm_repo" "$tpm_dir" > /dev/null
     fi
 
-    printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively \n\n"
+    printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively. Continuing...\n\n"
 }
 
 # Lazygit makes working with Git in the CLI much nicer, so install it.
 install_lazygit() {
+    printf "Installing lazygit...\n\n"
     LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" \
-        || { printf "Failed cURL'ing lazygit \n\n"; exit 1; }
-    tar xf lazygit.tar.gz lazygit
-    sudo install lazygit /usr/local/bin
-    printf "Installed Lazygit \n\n"
+    if output=$(curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" 2>&1); then
+        tar xf lazygit.tar.gz lazygit
+        sudo install lazygit /usr/local/bin
+        printf "Installed Lazygit. Continuing...\n\n"
+    else
+        printf "Failed cURL'ing lazygit \n\n"
+    fi
 }
 
 
 # Lazydocker makes working with Docker in the CLI much nicer, so install it.
 install_lazydocker() {
-    if curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash; then
+    printf "Installing lazydocker...\n\n"
+    if output=$(curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash 2>&1); then
         printf "Installed Lazydocker \n\n"
     else
         printf "Error: Failed to install Lazydocker\n\n"
     fi
+    printf "Installed lazydoker. Continuing...\n\n"
 }
 
 # I cant write code without vim, apologies
 install_neovim() {
     local neovim_repo="https://github.com/neovim/neovim"
     local neovim_dir="$HOMEDIR/neovim-build"
+    
+    printf "Installing Neovim...\n\n"
 
     if [ -d "$neovim_dir" ]; then
-        git -C "$neovim_dir" pull
-        rm -rf "$neovim_dir/build"
+        git -C "$neovim_dir" pull > /dev/null
+        rm -rf "$neovim_dir/build" > /dev/null
     else
-        git clone --depth 1 "$neovim_repo" "$neovim_dir"
+        git clone --depth 1 "$neovim_repo" "$neovim_dir" > /dev/null
     fi
-    cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo
-    sudo make install || { printf "Error: failed installing neovim \n\n"; exit 1; }
-    printf "Installed neovim \n\n"
+    cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo > /dev/null
+    sudo make install > /dev/null || { printf "Error: failed installing neovim \n\n"; exit 1; }
+    printf "Installed neovim. Continuing...\n\n"
 }
 
 # :checkhealth says I need python I guess
@@ -245,8 +284,8 @@ install_neovim_tools() {
         printf "Pip3 not found...exiting \n\n"
         exit 1
     else
-        pip3 install neovim
-        printf "Installed python-neovim \n\n"
+        pip3 install neovim > /dev/null
+        printf "Installed python-neovim. Continuing...\n\n"
     fi
 }
 
@@ -255,7 +294,7 @@ set_hostname() {
     if [ "$HOSTNAME" != "" ]; then
         sudo su -c "echo '$HOSTNAME' > /etc/hostname"
         export HOST=$HOSTNAME
-        printf "Hostname set to %s \n\n" "$HOSTNAME"
+        printf "Hostname set to %s. Continuing...\n\n" "$HOSTNAME"
     fi
 }
 
@@ -263,14 +302,14 @@ set_hostname() {
 config_git() {
     git config --global user.email "$GIT_EMAIL"
     git config --global user.name "$GIT_USER"
-    printf "Git configured to use %s as email and %s as user \n\n" "$GIT_EMAIL" "$GIT_USER"
+    printf "Git configured to use %s as email and %s as user. Continuing...\n\n" "$GIT_EMAIL" "$GIT_USER"
 }
 
 # Use systemd to start and enable ssh so we can connect
 start_enable_ssh() {
-    sudo systemctl start ssh
-    sudo systemctl enable ssh
-    printf "SSH started and enabled \n\n"
+    sudo systemctl start ssh > /dev/null
+    sudo systemctl enable ssh > /dev/null
+    printf "SSH started and enabled. Continuing...\n\n"
 }
 
 # Take the personal token that was made, auth with it, and add the ssh key
@@ -293,7 +332,7 @@ setup_github() {
         printf "Adding ssh key to github"
         gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
     fi
-    printf "GitHub setup finished.\n\n"
+    printf "GitHub setup finished. Continuing...\n\n"
 }
 
 # Heres the meat and potatoes, our bare repo will be unpacked
@@ -303,13 +342,14 @@ setup_git_repo() {
     local dotfiles_dir="$HOMEDIR/.dotfiles"
 
     if [ -d "$dotfiles_dir" ]; then
-        git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull
+        git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull > /dev/null
     else
-        git clone --bare "$dotfiles_repo" "$dotfiles_dir"
+        git clone --bare "$dotfiles_repo" "$dotfiles_dir" > /dev/null
     fi
-    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout
+    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout > /dev/null
     printf "Setting up bare repo's submodules \n\n"
-    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote
+    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote > /dev/null
+    printf ".dotfiles repo setup finished. Continuing...\n\n"
 }
 
 # Mainly just for the theme, hoping to phase out at some point
@@ -323,22 +363,23 @@ setup_ohmyzsh() {
             "" --unattended || { printf "Error: could not install OhMyZsh \n\n"; exit 1; }
         chsh -s "$(which zsh)"
     else
-        git -C "$HOMEDIR/.oh-my-zsh" pull
+        git -C "$HOMEDIR/.oh-my-zsh" pull > /dev/null
     fi
 
     local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     if [ -d "$zsh_syntax_highlighting_path" ]; then
-        git -C "$zsh_syntax_highlighting_path" pull
+        git -C "$zsh_syntax_highlighting_path" pull > /dev/null
     else
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || { printf "Error: could not clone zsh-syntax-highlighting \n\n"; exit 1;}
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || { printf "Error: could not clone zsh-syntax-highlighting \n\n"; exit 1;} > /dev/null
     fi
 
     local zsh_autosuggestions_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     if [ -d "$zsh_autosuggestions_path" ]; then
-        git -C "$zsh_autosuggestions_path" pull
+        git -C "$zsh_autosuggestions_path" pull > /dev/null
     else
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || { printf "Error: could not clone zsh-autosuggestions \n\n"; exit 1;}
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || { printf "Error: could not clone zsh-autosuggestions \n\n"; exit 1;} > /dev/null
     fi
+    printf "OhMyZsh, zsh-syntax-highlighting, and zsh-autosuggestions installed. Continuing...\n\n"
 }
 
 
