@@ -396,19 +396,21 @@ configure_environment() {
     (install_neovim)
     (install_neovim_tools)
     (install_rust)
+    refresh_sudo
     (install_rust_tools)
     (install_terminal_tools)
     (setup_github)
     (setup_git_repo)
-    (setup_ohmyzsh)
     refresh_sudo
     (install_wezterm)
+    (setup_ohmyzsh)
 }
 
 # Run it all and only care about STDERR
 main() {
     install_dependencies
     configure_environment
+    printf "Should be all set, good luck!!"
 }
 
 main "$@"
