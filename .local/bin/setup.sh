@@ -28,12 +28,6 @@ validate() {
         printf "Usage: %s <hostname> <git_email> <git_user> <gh_personal_token> \n\n" "$0"
         exit 1
     fi
-    # Since we use curl, might be good to double check for it
-    # Even though we are including it in the deps
-    if ! command -v curl >/dev/null 2>&1; then
-        printf "Error: curl command not found. Please install curl and try again.\n\n"
-        exit 1
-    fi
     printf "Validated. Continuing...\n\n"
 }
 
