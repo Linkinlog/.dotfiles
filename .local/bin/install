@@ -15,6 +15,7 @@ readonly HOSTNAME="$1"
 readonly GIT_EMAIL="$2"
 readonly GIT_USER="$3"
 readonly GH_PERSONAL_TOKEN="$4"
+readonly HOMEDIR="$HOME"
 
 ## Tools
 readonly TOOLS=("ssh" "gh" "git" "xclip" "docker" "ripgrep" "tmux" "zsh" "brave-browser" "i3")
@@ -79,11 +80,11 @@ install_rust() {
     curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y
     # Add Rust to PATH (taken from .cargo/env)
     case ":${PATH}:" in
-        *:"$HOME/.cargo/bin":*)
+        *:"$HOMEDIR/.cargo/bin":*)
             ;;
         *)
             # Prepending path in case a system-installed rustc needs to be overridden
-            export PATH="$HOME/.cargo/bin:$PATH"
+            export PATH="$HOMEDIR/.cargo/bin:$PATH"
             ;;
     esac
 }
@@ -147,9 +148,9 @@ install_go_tools() {
 
 install_terminal_tools() {
     local packer_repo="https://github.com/wbthomason/packer.nvim"
-    local packer_dir="$HOME/.local/share/nvim/site/pack/packer/start/packer.neovim"
+    local packer_dir="$HOMEDIR/.local/share/nvim/site/pack/packer/start/packer.neovim"
     local tpm_repo="https://github.com/tmux-plugins/tpm"
-    local tpm_dir="$HOME/.tmux/plugins/tpm"
+    local tpm_dir="$HOMEDIR/.tmux/plugins/tpm"
 
     if [ -d "$packer_dir" ]; then
         git -C "$packer_dir" pull
@@ -233,38 +234,38 @@ setup_github() {
     printf "Creating ssh key for GitHub for %s...\n" "$HOST"
     ssh-keygen -f ~/.ssh/github -N ""
 
-    gh ssh-key add "$HOME/.ssh/github.pub" --title "$HOST"
+    gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
 }
 
 setup_git_repo() {
     printf "Setting up Git repo"
-    git clone --bare https://github.com/linkinlog/.dotfiles "$HOME/.dotfiles"
-    git --git-dir="$HOME/.dotfiles" --work-tree="$HOME" checkout
+    git clone --bare https://github.com/linkinlog/.dotfiles "$HOMEDIR/.dotfiles"
+    git --git-dir="$HOMEDIR/.dotfiles" --work-tree="$HOMEDIR" checkout
     printf "Setting up bare repo's submodules"
-    git --git-dir="$HOME/.dotfiles/" --work-tree="$HOME" submodule update --init --remote
+    git --git-dir="$HOMEDIR/.dotfiles" --work-tree="$HOMEDIR" submodule update --init --remote
 }
 
 setup_ohmyzsh() {
     printf "Setting up OhMyZsh\n"
 
-    if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    if [ ! -d "$HOMEDIR/.oh-my-zsh" ]; then
         check_curl
         export RUNZSH=no
         export KEEP_ZSHRC=yes
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
             "" --unattended && chsh -s "$(which zsh)"
     else
-        git -C "$HOME/.oh-my-zsh" pull
+        git -C "$HOMEDIR/.oh-my-zsh" pull
     fi
 
-    local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
+    local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     if [ -d "$zsh_syntax_highlighting_path" ]; then
         git -C "$zsh_syntax_highlighting_path" pull
     else
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path"
     fi
 
-    local zsh_autosuggestions_path="${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+    local zsh_autosuggestions_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     if [ -d "$zsh_autosuggestions_path" ]; then
         git -C "$zsh_autosuggestions_path" pull
     else
