@@ -24,10 +24,9 @@ readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" 
 # Make sure all variables and dependencies exist
 validate() {
     printf "Validating arguments...\n\n"
-    if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
-        printf "Usage: %s <hostname> <git_email> <git_user> <gh_personal_token> \n\n" "$0"
-        exit 1
-    fi
+    # if [ "$HOSTNAME" = "" ] || [ "$GIT_EMAIL" = "" ] || [ "$GIT_USER" = "" ] || [ "$GH_PERSONAL_TOKEN" = "" ]; then
+    #     printf "Usage: %s <hostname> <git_email> <git_user> <gh_personal_token> \n\n" "$0"
+    # fi
     printf "Validated. Continuing...\n\n"
 }
 
@@ -101,7 +100,7 @@ add_brave_repo() {
     printf "Adding Brave GPG key if needed...\n\n"
     local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     local gpg_output=/usr/share/keyrings/brave-browser-archive-keyring.gpg
-    if output=$(sudo wget -O $gpg_output $brave_gpg  2>&1); then
+    if output=$(sudo wget -O "$gpg_output" "$brave_gpg"  2>&1); then
         echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo bash -c 'cat > /etc/apt/sources.list.d/brave-browser-release.list'
     else
         printf "Error occurred: %s\n" "$output"
@@ -285,15 +284,21 @@ install_neovim_tools() {
 
 # Change the hostname to whatever was set
 set_hostname() {
-    if [ "$HOSTNAME" != "" ]; then
-        sudo su -c "echo '$HOSTNAME' > /etc/hostname"
-        export HOST=$HOSTNAME
-        printf "Hostname set to %s. Continuing...\n\n" "$HOSTNAME"
+    if [ "$HOSTNAME" == "" ]; then
+        printf "Skipping hostname config...\n\n"
+        return 0
     fi
+    sudo su -c "echo '$HOSTNAME' > /etc/hostname"
+    export HOST=$HOSTNAME
+    printf "Hostname set to %s. Continuing...\n\n" "$HOSTNAME"
 }
 
 # Configure local git
 config_git() {
+    if [ "$GIT_EMAIL" == "" ] || [ "$GIT_USER" == "" ]; then
+        printf "Skipping git config...\n\n"
+        return 0
+    fi
     git config --global user.email "$GIT_EMAIL"
     git config --global user.name "$GIT_USER"
     printf "Git configured to use %s as email and %s as user. Continuing...\n\n" "$GIT_EMAIL" "$GIT_USER"
@@ -309,6 +314,10 @@ start_enable_ssh() {
 # Take the personal token that was made, auth with it, and add the ssh key
 # Necessary since we use git submodules with SSH
 setup_github() {
+    if [ "$GH_PERSONAL_TOKEN" == "" ]; then
+        printf "Skipping GH auth...\n\n"
+        return 0
+    fi
     printf "Setting up GitHub...\n\n"
 
     if ! gh auth status >/dev/null 2>&1; then
