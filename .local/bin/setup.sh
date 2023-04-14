@@ -157,15 +157,16 @@ install_wezterm() {
 
 # Installing Go from source and deleting old copies
 install_go() {
+    local arch="linux-amd64"
     local go_version
-    local arch
     local go_install_path
+
     go_version=$(curl -sSL "https://golang.org/VERSION?m=text")
-    arch="linux-amd64"
     go_install_path="$HOME/${go_version}.${arch}.tar.gz"
-    if [[ "$(go version | awk '{print $3}')" == "$go_version" ]]; then
+
+    if command -v go >/dev/null 2>&1 && [[ "$(go version | awk '{print $3}')" == "$go_version" ]]; then
         printf "Go version %s is already installed\n\n" "$go_version"
-        return
+        return 0
     fi
 
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
