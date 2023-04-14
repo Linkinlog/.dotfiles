@@ -183,7 +183,7 @@ install_go() {
 
 # Install all recommended Go tools
 install_go_tools() {
-    printf "Installing Go tools...\n\n"
+    printf "Installing/updating Go tools...\n\n"
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
             "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
@@ -206,10 +206,11 @@ install_go_tools() {
         )
 
         for tool in "${go_tools[@]}"; do
+            printf "Installing/updating %s...\n" "${tool%@*}"
             GO111MODULE=on go install "$tool" >/dev/null
         done
     fi
-    printf "Go tools installed. Continuing...\n\n"
+    printf "Go tools installed/updated. Continuing...\n\n"
 }
 
 # We use packer for plugin management in Neovim, so install that.
