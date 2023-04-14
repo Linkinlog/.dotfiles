@@ -60,7 +60,6 @@ check_dependencies() {
     printf "All dependencies set. Continuing...\n\n"
 }
 
-
 # Refresh sudo auth so we can ask for password less
 refresh_sudo() {
     printf "Refreshing sudo authentication... \n\n"
@@ -76,7 +75,7 @@ install_packages() {
     printf "Determining package manager... \n\n"
     if command -v apt-get >/dev/null 2>&1; then
         package_manager="apt-get"
-        sudo apt-get update -q > /dev/null
+        sudo apt-get update -q >/dev/null
     elif command -v dnf >/dev/null 2>&1; then
         package_manager="dnf"
     elif command -v pacman >/dev/null 2>&1; then
@@ -91,7 +90,7 @@ install_packages() {
     fi
 
     printf "Using %s as package manager and installing...\n\n" "$package_manager"
-    sudo "$package_manager" -qy install "${package_list[@]}" > /dev/null
+    sudo "$package_manager" -qy install "${package_list[@]}" >/dev/null
     printf "All packages installed. Continuing...\n\n"
 }
 
@@ -104,7 +103,7 @@ add_brave_repo() {
         return
     fi
     local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-    if output=$(sudo wget -O "$gpg_output" "$brave_gpg"  2>&1); then
+    if output=$(sudo wget -O "$gpg_output" "$brave_gpg" 2>&1); then
         echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo bash -c 'cat > /etc/apt/sources.list.d/brave-browser-release.list'
     else
         printf "Error occurred: %s\n" "$output"
@@ -115,9 +114,9 @@ add_brave_repo() {
 
 # Use Rustup to install Rust stable
 install_rust() {
-    if ! command -v rustc > /dev/null 2>&1; then
+    if ! command -v rustc >/dev/null 2>&1; then
         printf "Installing Rust stable with Rustup...\n\n"
-        curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y > /dev/null
+        curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y >/dev/null
         printf "Rust stable installed. Continuing...\n\n"
     fi
     rustup update
@@ -135,7 +134,7 @@ install_rust_tools() {
         exit 1
     fi
     if ! command -v tree-sitter >/dev/null 2>&1; then
-        cargo install tree-sitter-cli > /dev/null
+        cargo install tree-sitter-cli >/dev/null
         printf "tree-sitter-cli installed \n\n"
     fi
     printf "tree-sitter-cli installed. Continuing...\n\n"
@@ -147,7 +146,7 @@ install_wezterm() {
     local release
     wezterm_version=$(curl -s "https://api.github.com/repos/wez/wezterm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
     release=$(lsb_release -rs)
-    if command -v wezterm > /dev/null 2>&1; then
+    if command -v wezterm >/dev/null 2>&1; then
         installed_version=$(wezterm -V | awk '{print $2}')
         if [ "$installed_version" = "$wezterm_version" ]; then
             printf "Wezterm is installed and up to date. Continuing...\n\n"
@@ -156,7 +155,7 @@ install_wezterm() {
     fi
     printf "Installing WezTerm version %s...\n\n" "$wezterm_version"
     if output=$(curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb" 2>&1); then
-        sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb" > /dev/null
+        sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb" >/dev/null
     else
         printf "Error occured: %s\n" "$output"
     fi
@@ -178,7 +177,7 @@ install_go() {
 
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
         printf "Installing Go version %s to %s\n\n" "$go_version" "$go_install_path"
-        sudo rm -rf /usr/local/go && 
+        sudo rm -rf /usr/local/go &&
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
     else
         printf "Error occurred: %s\n" "$output"
@@ -193,28 +192,28 @@ install_go_tools() {
     printf "Installing Go tools...\n\n"
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
-        "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
-        "github.com/go-delve/delve/cmd/dlv@latest"
-        "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
-        "github.com/uber/go-torch@latest"
-        "github.com/fatih/gomodifytags@latest"
-        "github.com/josharian/impl@latest"
-        "github.com/golang/mock/mockgen@latest"
-        "github.com/onsi/ginkgo/ginkgo@latest"
-        "github.com/cweill/gotests/gotests@latest"
-        "github.com/rogpeppe/godef@latest"
-        "github.com/godoctor/godoctor@latest"
-        "github.com/segmentio/golines@latest"
-        "github.com/alvaroloes/enumer@latest"
-        "golang.org/x/tools/cmd/goimports@latest"
-        "golang.org/x/tools/cmd/gorename@latest"
-        "golang.org/x/tools/cmd/guru@latest"
-        "mvdan.cc/gofumpt@latest"
-    )
+            "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
+            "github.com/go-delve/delve/cmd/dlv@latest"
+            "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+            "github.com/uber/go-torch@latest"
+            "github.com/fatih/gomodifytags@latest"
+            "github.com/josharian/impl@latest"
+            "github.com/golang/mock/mockgen@latest"
+            "github.com/onsi/ginkgo/ginkgo@latest"
+            "github.com/cweill/gotests/gotests@latest"
+            "github.com/rogpeppe/godef@latest"
+            "github.com/godoctor/godoctor@latest"
+            "github.com/segmentio/golines@latest"
+            "github.com/alvaroloes/enumer@latest"
+            "golang.org/x/tools/cmd/goimports@latest"
+            "golang.org/x/tools/cmd/gorename@latest"
+            "golang.org/x/tools/cmd/guru@latest"
+            "mvdan.cc/gofumpt@latest"
+        )
 
-    for tool in "${go_tools[@]}"; do
-        GO111MODULE=on go install "$tool" > /dev/null
-    done
+        for tool in "${go_tools[@]}"; do
+            GO111MODULE=on go install "$tool" >/dev/null
+        done
     fi
     printf "Go tools installed. Continuing...\n\n"
 }
@@ -230,15 +229,15 @@ install_terminal_tools() {
     printf "Installing TPM and Packer...\n\n"
 
     if [ -d "$packer_dir" ]; then
-        git -C "$packer_dir" pull > /dev/null
+        git -C "$packer_dir" pull >/dev/null
     else
-        git clone --depth 1 "$packer_repo" "$packer_dir" > /dev/null
+        git clone --depth 1 "$packer_repo" "$packer_dir" >/dev/null
     fi
 
     if [ -d "$tpm_dir" ]; then
-        git -C "$tpm_dir" pull > /dev/null
+        git -C "$tpm_dir" pull >/dev/null
     else
-        git clone "$tpm_repo" "$tpm_dir" > /dev/null
+        git clone "$tpm_repo" "$tpm_dir" >/dev/null
     fi
 
     printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively. Continuing...\n\n"
@@ -257,7 +256,6 @@ install_lazygit() {
     fi
 }
 
-
 # Lazydocker makes working with Docker in the CLI much nicer, so install it.
 install_lazydocker() {
     printf "Installing lazydocker...\n\n"
@@ -273,17 +271,20 @@ install_lazydocker() {
 install_neovim() {
     local neovim_repo="https://github.com/neovim/neovim"
     local neovim_dir="$HOMEDIR/neovim-build"
-    
+
     printf "Installing Neovim...\n\n"
 
     if [ -d "$neovim_dir" ]; then
-        git -C "$neovim_dir" pull > /dev/null
-        rm -rf "$neovim_dir/build" > /dev/null
+        git -C "$neovim_dir" pull >/dev/null
+        rm -rf "$neovim_dir/build" >/dev/null
     else
-        git clone --depth 1 "$neovim_repo" "$neovim_dir" > /dev/null
+        git clone --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
     fi
-    cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo > /dev/null
-    sudo make install > /dev/null || { printf "Error: failed installing neovim \n\n"; exit 1; }
+    cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo >/dev/null
+    sudo make install >/dev/null || {
+        printf "Error: failed installing neovim \n\n"
+        exit 1
+    }
     printf "Installed neovim. Continuing...\n\n"
 }
 
@@ -293,7 +294,7 @@ install_neovim_tools() {
         printf "Pip3 not found...exiting \n\n"
         exit 1
     else
-        pip3 install neovim > /dev/null
+        pip3 install neovim >/dev/null
         printf "Installed python-neovim. Continuing...\n\n"
     fi
 }
@@ -322,8 +323,8 @@ config_git() {
 
 # Use systemd to start and enable ssh so we can connect
 start_enable_ssh() {
-    sudo systemctl start ssh > /dev/null
-    sudo systemctl enable ssh > /dev/null
+    sudo systemctl start ssh >/dev/null
+    sudo systemctl enable ssh >/dev/null
     printf "SSH started and enabled. Continuing...\n\n"
 }
 
@@ -338,7 +339,7 @@ setup_github() {
 
     if ! gh auth status >/dev/null 2>&1; then
         printf "Adding Token %s \n\n" "$GH_PERSONAL_TOKEN"
-        gh auth login --with-token <<< "$GH_PERSONAL_TOKEN"
+        gh auth login --with-token <<<"$GH_PERSONAL_TOKEN"
     fi
 
     if [ ! -f "$HOME/.ssh/github" ]; then
@@ -358,13 +359,13 @@ setup_git_repo() {
     local dotfiles_dir="$HOMEDIR/.dotfiles"
 
     if [ -d "$dotfiles_dir" ]; then
-        git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull > /dev/null
+        git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull >/dev/null
     else
-        git clone --bare "$dotfiles_repo" "$dotfiles_dir" > /dev/null
+        git clone --bare "$dotfiles_repo" "$dotfiles_dir" >/dev/null
     fi
-    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout > /dev/null
+    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout >/dev/null
     printf "Setting up bare repo's submodules \n\n"
-    GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote > /dev/null
+    GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote >/dev/null
     printf ".dotfiles repo setup finished. Continuing...\n\n"
 }
 
@@ -376,28 +377,36 @@ setup_ohmyzsh() {
         export RUNZSH=no
         export KEEP_ZSHRC=yes
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
-            "" --unattended || { printf "Error: could not install OhMyZsh \n\n"; exit 1; }
+            "" --unattended || {
+            printf "Error: could not install OhMyZsh \n\n"
+            exit 1
+        }
         sudo chsh -s "$(which zsh)" -u "$(whoami)"
     else
-        git -C "$HOMEDIR/.oh-my-zsh" pull > /dev/null
+        git -C "$HOMEDIR/.oh-my-zsh" pull >/dev/null
     fi
 
     local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     if [ -d "$zsh_syntax_highlighting_path" ]; then
-        git -C "$zsh_syntax_highlighting_path" pull > /dev/null
+        git -C "$zsh_syntax_highlighting_path" pull >/dev/null
     else
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || { printf "Error: could not clone zsh-syntax-highlighting \n\n"; exit 1;} > /dev/null
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || {
+            printf "Error: could not clone zsh-syntax-highlighting \n\n"
+            exit 1
+        } >/dev/null
     fi
 
     local zsh_autosuggestions_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     if [ -d "$zsh_autosuggestions_path" ]; then
-        git -C "$zsh_autosuggestions_path" pull > /dev/null
+        git -C "$zsh_autosuggestions_path" pull >/dev/null
     else
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || { printf "Error: could not clone zsh-autosuggestions \n\n"; exit 1;} > /dev/null
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || {
+            printf "Error: could not clone zsh-autosuggestions \n\n"
+            exit 1
+        } >/dev/null
     fi
     printf "OhMyZsh, zsh-syntax-highlighting, and zsh-autosuggestions installed. Continuing...\n\n"
 }
-
 
 # Group the dependency commands together
 install_dependencies() {
