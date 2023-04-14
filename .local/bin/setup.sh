@@ -171,7 +171,7 @@ install_go() {
     go_version=$(curl -sSL "https://golang.org/VERSION?m=text")
     arch="linux-amd64"
     go_install_path="$HOME/${go_version}.${arch}.tar.gz"
-    if [[ "$(go version | awk '{print $3}')" == "go${go_version}" ]]; then
+    if [[ "$(go version | awk '{print $3}')" == "$go_version" ]]; then
         printf "Go version %s is already installed\n\n" "$go_version"
         return
     fi
