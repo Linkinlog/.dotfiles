@@ -249,7 +249,7 @@ install_terminal_tools() {
         git clone "$tpm_repo" "$tpm_dir" >/dev/null
     fi
 
-    printf "Packer and TPM should be installed! Be sure to run :PackerSync and <prefix>+I to install each respectively. Continuing...\n\n"
+    printf "Packer and TPM should be installed! Be sure to run <prefix>+I to install TPM plugins. Continuing...\n\n"
 }
 
 # Lazygit makes working with Git in the CLI much nicer, so install it.
@@ -293,8 +293,8 @@ install_neovim() {
     local neovim_dir="$HOMEDIR/neovim-build"
 
     if command -v nvim >/dev/null 2>&1; then
-        installed_version=$(nvim --version | head -n 1)
-        latest_version=$(curl -s https://api.github.com/repos/neovim/neovim/releases/tags/nightly | grep -oP 'NVIM v[^\\n]*')
+        installed_version=$(nvim --version | head -n 1 | grep -oP 'NVIM v\K[\d.]+')
+        latest_version=$(curl -s https://api.github.com/repos/neovim/neovim/releases/tags/nightly | grep -oP 'NVIM v\K[\d.]+')
 
         if [ "$installed_version" = "$latest_version" ]; then
             printf "Neovim is already up-to-date. Continuing...\n\n"
