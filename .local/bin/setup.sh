@@ -147,6 +147,13 @@ install_wezterm() {
     local release
     wezterm_version=$(curl -s "https://api.github.com/repos/wez/wezterm/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
     release=$(lsb_release -rs)
+    if command -v wezterm > /dev/null 2>&1; then
+        installed_version=$(wezterm -V | awk '{print $2}')
+        if [ "$installed_version" = "$wezterm_version" ]; then
+            printf "Wezterm is installed and up to date. Continuing...\n\n"
+            return
+        fi
+    fi
     printf "Installing WezTerm version %s...\n\n" "$wezterm_version"
     if output=$(curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb" 2>&1); then
         sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb" > /dev/null
