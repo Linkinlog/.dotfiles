@@ -115,9 +115,13 @@ add_brave_repo() {
 
 # Use Rustup to install Rust stable
 install_rust() {
-    printf "Installing Rust stable with Rustup...\n\n"
-    curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y > /dev/null
-    printf "Rust stable installed. Continuing...\n\n"
+    if ! command -v rustc > /dev/null 2>&1; then
+        printf "Installing Rust stable with Rustup...\n\n"
+        curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y > /dev/null
+        printf "Rust stable installed. Continuing...\n\n"
+    fi
+    rustup update
+    printf "Rust stable updated. Continuing...\n\n"
 }
 
 # Installing various cargo tools
