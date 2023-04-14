@@ -127,17 +127,18 @@ install_rust() {
 # Installing various cargo tools
 # for now just tree-sitter.
 install_rust_tools() {
-    printf "Installing tools that need cargo...\n\n"
+    printf "Installing tree-sitter-cli with Cargo...\n\n"
     # Add Rust to PATH (taken from .cargo/env)
     export PATH="$HOMEDIR/.cargo/bin:$PATH"
     if ! command -v cargo >/dev/null 2>&1; then
         printf "Cargo not found...exiting\n\n"
         exit 1
-    else
+    fi
+    if ! command -v tree-sitter >/dev/null 2>&1; then
         cargo install tree-sitter-cli > /dev/null
         printf "tree-sitter-cli installed \n\n"
     fi
-    printf "Cargo tools installed. Continuing...\n\n"
+    printf "tree-sitter-cli installed. Continuing...\n\n"
 }
 
 # Installing our terminal emulator, wezterm
