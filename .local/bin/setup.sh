@@ -240,9 +240,16 @@ install_terminal_tools() {
 
 # Lazygit makes working with Git in the CLI much nicer, so install it.
 install_lazygit() {
+    local lazygit_version
+    lazygit_version=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+
+    if command -v lazygit >/dev/null 2>&1 && [[ "$lazygit_version" == "$(lazygit -v | grep -oP '(?<=, )version=\K[^,]*')" ]]; then
+        printf "Lazygit version %s is already installed\n\n" "$lazygit_version"
+        return 0
+    fi
+
     printf "Installing lazygit...\n\n"
-    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    if output=$(curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" 2>&1); then
+    if output=$(curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${lazygit_version}_Linux_x86_64.tar.gz" 2>&1); then
         tar xf lazygit.tar.gz lazygit
         sudo install lazygit /usr/local/bin
         printf "Installed Lazygit. Continuing...\n\n"
