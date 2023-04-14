@@ -60,31 +60,45 @@ refresh_sudo() {
 # Installs whatever package list is passed in
 # @param Array package_list
 install_packages() {
+    local opts=()
     local package_manager
+    local upgrade_cmd
+    local update_cmd="update"
+    local install_cmd="install"
     local package_list=("$@")
 
     printf "Determining package manager... \n\n"
     if command -v apt-get >/dev/null 2>&1; then
         package_manager="apt-get"
-        sudo apt-get update -q >/dev/null
+        opts=(-y -qq)
+        upgrade_cmd="upgrade"
     elif command -v dnf >/dev/null 2>&1; then
         package_manager="dnf"
+        opts=(-y -q)
+        update_cmd="upgrade"
     elif command -v pacman >/dev/null 2>&1; then
         package_manager="pacman"
-        sudo pacman -Sy
+        opts=(--noconfirm --quiet)
+        update_cmd="-Syu"
+        install_cmd="-S"
     elif command -v zypper >/dev/null 2>&1; then
         package_manager="zypper"
-        sudo zypper refresh
+        opts=(--non-interactive --quiet)
     else
         printf "No supported package manager found.\n\n"
         exit 1
     fi
 
-    printf "Using %s as package manager and installing...\n\n" "$package_manager"
-    sudo "$package_manager" -y -qq install "${package_list[@]}" >/dev/null
-    printf "All packages installed. Continuing...\n\n"
-    sudo "$package_manager" update && sudo "$package_manager" upgrade -y -qq >/dev/null
+    # Use the update_cmd as the default value for the upgrade_cmd if not set
+    upgrade_cmd="${upgrade_cmd:-$update_cmd}"
+
+    printf "Using %s as package manager and updating...\n\n" "$package_manager"
+    sudo "$package_manager" "${opts[@]}" "$update_cmd" >/dev/null
+    sudo "$package_manager" "${opts[@]}" "$upgrade_cmd" >/dev/null
     printf "All packages upgraded. Continuing...\n\n"
+    printf "Using %s as package manager and installing packages/tools...\n\n" "$package_manager"
+    sudo "$package_manager" "${opts[@]}" "$install_cmd" "${package_list[@]}" >/dev/null
+    printf "All packages installed. Continuing...\n\n"
 }
 
 ## Setting up brave gpg key
