@@ -260,13 +260,17 @@ install_lazygit() {
 
 # Lazydocker makes working with Docker in the CLI much nicer, so install it.
 install_lazydocker() {
-    printf "Installing lazydocker...\n\n"
+    if command -v lazydocker >/dev/null 2>&1; then
+        printf "Lazydocker already installed. Continuing...\n\n"
+        return 0
+    fi
+    printf "Installing Lazydocker...\n\n"
     if output=$(curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash 2>&1); then
         printf "Installed Lazydocker \n\n"
     else
         printf "Error: Failed to install Lazydocker\n\n"
     fi
-    printf "Installed lazydoker. Continuing...\n\n"
+    printf "Installed Lazydocker. Continuing...\n\n"
 }
 
 # I cant write code without vim, apologies
