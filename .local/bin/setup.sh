@@ -310,13 +310,17 @@ install_neovim() {
 
 # :checkhealth says I need python I guess
 install_neovim_tools() {
+    printf "Installing Python-Neovim...\n\n"
     if ! command -v pip3 >/dev/null 2>&1; then
         printf "Pip3 not found...exiting \n\n"
         exit 1
-    else
-        pip3 install neovim >/dev/null
-        printf "Installed python-neovim. Continuing...\n\n"
     fi
+    if pip3 list | grep neovim >/dev/null 2>&1; then
+        printf "Python-Neovim already installed. Continuing...\n\n"
+        return 0
+    fi
+    pip3 install neovim >/dev/null
+    printf "Installed Python-Neovim. Continuing...\n\n"
 }
 
 # Change the hostname to whatever was set
