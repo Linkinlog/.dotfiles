@@ -278,20 +278,34 @@ install_neovim() {
     local neovim_repo="https://github.com/neovim/neovim"
     local neovim_dir="$HOMEDIR/neovim-build"
 
+    if command -v nvim >/dev/null 2>&1; then
+        installed_version=$(nvim --version | head -n 1)
+        latest_version=$(curl -s https://api.github.com/repos/neovim/neovim/releases/tags/nightly | grep -oP 'NVIM v[^\\n]*')
+
+        if [ "$installed_version" = "$latest_version" ]; then
+            printf "Neovim is already up-to-date. Continuing...\n\n"
+            return 0
+        fi
+    fi
+
     printf "Installing Neovim...\n\n"
 
     if [ -d "$neovim_dir" ]; then
+        printf "Neovim build directory found, updating...\n\n"
         git -C "$neovim_dir" pull >/dev/null
         rm -rf "$neovim_dir/build" >/dev/null
     else
+        printf "Neovim build not directory found, cloning...\n\n"
         git clone --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
     fi
+    printf "Making Neovim...\n\n"
     cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo >/dev/null
+    printf "Installing Neovim...\n\n"
     sudo make install >/dev/null || {
-        printf "Error: failed installing neovim \n\n"
+        printf "Error: failed installing Neovim \n\n"
         exit 1
     }
-    printf "Installed neovim. Continuing...\n\n"
+    printf "Installed Neovim %s. Continuing...\n\n" "$(nvim --version | head -n 1 | awk '{print $2}')"
 }
 
 # :checkhealth says I need python I guess
