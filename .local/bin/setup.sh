@@ -93,7 +93,7 @@ add_brave_repo() {
     local gpg_output=/usr/share/keyrings/brave-browser-archive-keyring.gpg
     if [ -e "$gpg_output" ]; then
         printf "Brave gpg keyring found. Continuing...\n\n"
-        return
+        return 0
     fi
     local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     if output=$(sudo wget -O "$gpg_output" "$brave_gpg" 2>&1); then
@@ -143,7 +143,7 @@ install_wezterm() {
         installed_version=$(wezterm -V | awk '{print $2}')
         if [ "$installed_version" = "$wezterm_version" ]; then
             printf "Wezterm is installed and up to date. Continuing...\n\n"
-            return
+            return 0
         fi
     fi
     printf "Installing WezTerm version %s...\n\n" "$wezterm_version"
@@ -403,7 +403,6 @@ setup_ohmyzsh() {
 
 # Group the dependency commands together
 install_dependencies() {
-    validate
     add_brave_repo
     install_packages "${DEPS[@]}" "${TOOLS[@]}"
     check_dependencies
