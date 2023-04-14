@@ -98,8 +98,12 @@ install_packages() {
 ## Setting up brave gpg key
 add_brave_repo() {
     printf "Adding Brave GPG key if needed...\n\n"
-    local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     local gpg_output=/usr/share/keyrings/brave-browser-archive-keyring.gpg
+    if [ -e "$gpg_output" ]; then
+        printf "Brave gpg keyring found. Continuing...\n\n"
+        return
+    fi
+    local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     if output=$(sudo wget -O "$gpg_output" "$brave_gpg"  2>&1); then
         echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo bash -c 'cat > /etc/apt/sources.list.d/brave-browser-release.list'
     else
