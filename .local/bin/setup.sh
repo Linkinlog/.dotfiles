@@ -81,8 +81,10 @@ install_packages() {
     fi
 
     printf "Using %s as package manager and installing...\n\n" "$package_manager"
-    sudo "$package_manager" -qy install "${package_list[@]}" >/dev/null
+    sudo "$package_manager" -y -qq install "${package_list[@]}" >/dev/null
     printf "All packages installed. Continuing...\n\n"
+    sudo "$package_manager" update && sudo "$package_manager" upgrade -y -qq >/dev/null
+    printf "All packages upgraded. Continuing...\n\n"
 }
 
 ## Setting up brave gpg key
