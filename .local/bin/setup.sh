@@ -349,17 +349,22 @@ setup_github() {
 setup_git_repo() {
     printf "Setting up Git repo \n\n"
     local dotfiles_repo="https://github.com/linkinlog/.dotfiles"
-    local dotfiles_dir="$HOMEDIR/.dotfiles"
+    local dotfiles_dir="$HOMEDIR/.dotfiles.git"
+    local config_cmd="git --git-dir=$dotfiles_dir --work-tree=$HOMEDIR"
 
     if [ -d "$dotfiles_dir" ]; then
-        git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" pull >/dev/null
+        eval "$config_cmd" stash >/dev/null
+        eval "$config_cmd" pull >/dev/null
+        eval "$config_cmd" stash pop >/dev/null
     else
-        git clone --bare "$dotfiles_repo" "$dotfiles_dir" >/dev/null
+        git clone --bare "$dotfiles_repo" >/dev/null
     fi
-    git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" checkout >/dev/null
+
+    eval "$config_cmd" config --local status.showUntrackedFiles no
+    eval "$config_cmd" checkout >/dev/null
     printf "Setting up bare repo's submodules \n\n"
-    GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git --git-dir="$dotfiles_dir" --work-tree="$HOMEDIR" submodule update --init --remote >/dev/null
-    printf ".dotfiles repo setup finished. Continuing...\n\n"
+    GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
+    printf "dotfiles repo setup finished. Continuing...\n\n"
 }
 
 # Mainly just for the theme, hoping to phase out at some point
