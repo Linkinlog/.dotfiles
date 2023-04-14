@@ -347,8 +347,16 @@ config_git() {
 
 # Use systemd to start and enable ssh so we can connect
 start_enable_ssh() {
-    sudo systemctl start ssh >/dev/null
-    sudo systemctl enable ssh >/dev/null
+    # Check if the service is enabled
+    if ! systemctl is-enabled ssh >/dev/null 2>&1; then
+        sudo systemctl enable ssh >/dev/null 2>&1
+    fi
+
+    # Check if the service is started (active)
+    if ! systemctl is-active ssh >/dev/null 2>&1; then
+        sudo systemctl start ssh >/dev/null 2>&1
+    fi
+
     printf "SSH started and enabled. Continuing...\n\n"
 }
 
