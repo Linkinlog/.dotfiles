@@ -392,7 +392,7 @@ setup_github() {
         # Make new ssh key for gh
         printf "Creating ssh key for GitHub for %s...\n\n" "$HOST"
         ssh-keygen -f ~/.ssh/github -N ""
-        printf "Adding ssh key to github"
+        printf "Adding ssh key to github\n\n"
         gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
     fi
     printf "GitHub setup finished. Continuing...\n\n"
@@ -417,6 +417,7 @@ setup_git_repo() {
     eval "$config_cmd" checkout >/dev/null
     printf "Setting up bare repo's submodules \n\n"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
+    printf "Installing our neovim plugins\n\n"
     printf "dotfiles repo setup finished. Continuing...\n\n"
 }
 
