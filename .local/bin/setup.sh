@@ -418,6 +418,7 @@ setup_git_repo() {
     printf "Setting up bare repo's submodules \n\n"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
     printf "Installing our neovim plugins\n\n"
+    nvim -c 'PackerSync' -c 'autocmd User PackerComplete qa'
     printf "dotfiles repo setup finished. Continuing...\n\n"
 }
 
