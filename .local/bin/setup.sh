@@ -447,16 +447,14 @@ setup_git_repo() {
     local dotfiles_dir="$HOMEDIR/.dotfiles.git"
     local config_cmd="git --git-dir=$dotfiles_dir --work-tree=$HOMEDIR"
 
-    if [ -d "$dotfiles_dir" ]; then
-        eval "$config_cmd" stash >/dev/null
-        eval "$config_cmd" pull >/dev/null
-        eval "$config_cmd" stash pop >/dev/null
-    else
+    if [ ! -d "$dotfiles_dir" ]; then
         git clone --bare "$dotfiles_repo" >/dev/null
+        eval "$config_cmd" checkout >/dev/null
     fi
 
+    eval "$config_cmd" fetch origin development >/dev/null
+    eval "$config_cmd" merge development >/dev/null
     eval "$config_cmd" config --local status.showUntrackedFiles no
-    eval "$config_cmd" checkout >/dev/null
     printf "Setting up bare repo's submodules \n\n"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
     printf "Installing our neovim plugins\n\n"
