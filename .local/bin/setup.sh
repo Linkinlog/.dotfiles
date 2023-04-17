@@ -19,7 +19,7 @@ readonly HOMEDIR="$HOME"
 
 ## Tools
 readonly TOOLS=("ssh" "gh" "git" "xclip" "docker" "ripgrep" "tmux" "zsh" "brave-browser" "i3")
-readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev")
+readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev" "luarocks" "ruby" "ruby-dev" "php" "php-zip" "unzip" "openjdk-11-jdk" "julia" "powershell" "wget" "apt-transport-https" "software-properties-common")
 
 # Ensure all dependencies are here after installation
 check_dependencies() {
@@ -99,6 +99,24 @@ install_packages() {
     printf "Using %s as package manager and installing packages/tools...\n\n" "$package_manager"
     sudo "$package_manager" "${opts[@]}" "$install_cmd" "${package_list[@]}" >/dev/null
     printf "All packages installed. Continuing...\n\n"
+}
+
+add_ms_repo() {
+    local deb_output=packages-microsoft-prod.deb
+    local microsoft_deb
+    if [ -e "$deb_output" ]; then
+        printf "Microsoft deb found. Continuing...\n\n"
+        return 0
+    fi
+    microsoft_deb=https://packages.microsoft.com/config/ubuntu/"$(lsb_release -rs)"/packages-microsoft-prod.deb
+    if output=$(sudo wget -q -O "$deb_output" "$microsoft_deb" 2>&1); then
+        printf "Installing powershell dependency. Continuing...\n\n"
+        sudo dpkg -i packages-microsoft-prod.deb
+    else
+        printf "Error occurred: %s\n" "$output"
+        exit 1
+    fi
+    printf "Powershell all set to be installed. Continuing...\n\n"
 }
 
 ## Setting up brave gpg key
@@ -192,7 +210,6 @@ install_go() {
         exit 1
     fi
     printf "Go installed. Continuing...\n\n"
-    export PATH="$PATH:/usr/local/go/bin"
 }
 
 # Install all recommended Go tools
@@ -200,22 +217,34 @@ install_go_tools() {
     printf "Installing/updating Go tools...\n\n"
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
-            "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
-            "github.com/go-delve/delve/cmd/dlv@latest"
-            "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
-            "github.com/uber/go-torch@latest"
-            "github.com/fatih/gomodifytags@latest"
-            "github.com/josharian/impl@latest"
-            "github.com/golang/mock/mockgen@latest"
-            "github.com/onsi/ginkgo/ginkgo@latest"
-            "github.com/cweill/gotests/gotests@latest"
-            "github.com/rogpeppe/godef@latest"
-            "github.com/godoctor/godoctor@latest"
-            "github.com/segmentio/golines@latest"
+            "github.com/ChimeraCoder/gojson/gojson@latest"
+            "github.com/abenz1267/gomvp@latest"
             "github.com/alvaroloes/enumer@latest"
+            "github.com/cweill/gotests/gotests@latest"
+            "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
+            "github.com/fatih/errwrap@latest"
+            "github.com/fatih/gomodifytags@latest"
+            "github.com/go-delve/delve/cmd/dlv@latest"
+            "github.com/godoctor/godoctor@latest"
+            "github.com/golang/mock/mockgen@latest"
+            "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+            "github.com/jimmyfrasche/closed/cmds/fillswitch@latest"
+            "github.com/josharian/impl@latest"
+            "github.com/koron/iferr@latest"
+            "github.com/kyoh86/richgo@latest"
+            "github.com/ofabry/go-callvis@latest"
+            "github.com/onsi/ginkgo/ginkgo@latest"
+            "github.com/rogpeppe/godef@latest"
+            "github.com/searKing/golang/tools/go-enum@latest"
+            "github.com/segmentio/golines@latest"
+            "github.com/tmc/json-to-struct@latest"
+            "github.com/uber/go-torch@latest"
+            "golang.org/x/tools/cmd/callgraph@latest"
             "golang.org/x/tools/cmd/goimports@latest"
             "golang.org/x/tools/cmd/gorename@latest"
             "golang.org/x/tools/cmd/guru@latest"
+            "golang.org/x/vuln/cmd/govulncheck@latest"
+            "gotest.tools/gotestsum@latest"
             "mvdan.cc/gofumpt@latest"
         )
 
@@ -329,11 +358,18 @@ install_neovim_tools() {
         printf "Pip3 not found...exiting \n\n"
         exit 1
     fi
-    if pip3 list | grep neovim >/dev/null 2>&1; then
-        printf "Python-Neovim already installed. Continuing...\n\n"
-        return 0
+    if ! command -v npm >/dev/null 2>&1; then
+        printf "NPM not found...exiting \n\n"
+        exit 1
     fi
     pip3 install neovim >/dev/null
+    pip3 install autopep8 >/dev/null
+    pip3 install pint >/dev/null
+    sudo npm install -g neovim >/dev/null
+    sudo npm install -g remark >/dev/null
+    cpan -i Neovim::Ext >/dev/null
+    sudo gem install neovim >/dev/null
+    nvim -c 'TSUpdate' -c 'qa' >/dev/null
     printf "Installed Python-Neovim. Continuing...\n\n"
 }
 
@@ -372,6 +408,12 @@ start_enable_ssh() {
     fi
 
     printf "SSH started and enabled. Continuing...\n\n"
+}
+
+install_composer() {
+    if ! command -v composer >/dev/null 2>&1; then
+        curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+    fi
 }
 
 # Take the personal token that was made, auth with it, and add the ssh key
@@ -464,6 +506,7 @@ setup_ohmyzsh() {
 # Group the dependency commands together
 install_dependencies() {
     add_brave_repo
+    add_ms_repo
     install_packages "${DEPS[@]}" "${TOOLS[@]}"
     check_dependencies
 }
@@ -476,6 +519,7 @@ configure_environment() {
     refresh_sudo
     (install_go)
     (install_go_tools)
+    (install_composer)
     (install_lazydocker)
     (install_lazygit)
     refresh_sudo
@@ -494,6 +538,7 @@ configure_environment() {
 
 # Run it all and only care about STDERR
 main() {
+    cd "$HOME"
     install_dependencies
     configure_environment
     printf "Should be all set, good luck!!"
