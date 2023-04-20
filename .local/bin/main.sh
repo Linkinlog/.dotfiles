@@ -132,9 +132,12 @@ add_brave_repo() {
 
 # Use Rustup to install Rust stable
 install_rust() {
+    # Allows a user to set the profile/toolchain they want
+    local profile="${RUST_PROFILE:-minimal}"
+    local toolchain="${RUST_TOOLCHAIN:-stable}"
     if ! command -v rustc >/dev/null 2>&1; then
         printf "Installing Rust stable with Rustup...\n\n"
-        curl https://sh.rustup.rs -sSf | sh -s -- --profile minimal --default-toolchain stable -y >/dev/null
+        curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y >/dev/null
         printf "Rust stable installed. Continuing...\n\n"
     fi
     rustup update
