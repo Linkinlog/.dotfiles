@@ -539,7 +539,7 @@ main() {
     cd "$HOME"
     install_dependencies
     configure_environment
-    printf "Should be all set, good luck!!"
+    printf "Should be all set, good luck!!\n"
 }
 
 main "$@"
