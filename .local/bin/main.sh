@@ -140,6 +140,7 @@ install_rust() {
         curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y >/dev/null
         printf "Rust stable installed. Continuing...\n\n"
     fi
+    rustup default "$toolchain"
     rustup update
     printf "Rust stable updated. Continuing...\n\n"
 }
