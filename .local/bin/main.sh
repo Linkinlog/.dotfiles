@@ -364,7 +364,6 @@ install_neovim_tools() {
     pip3 install pint >/dev/null
     sudo npm install -g neovim >/dev/null
     sudo npm install -g remark >/dev/null
-    cpan -i Neovim::Ext >/dev/null
     sudo gem install neovim >/dev/null
     nvim -c 'TSUpdate' -c 'qa' >/dev/null
     printf "Installed Python-Neovim. Continuing...\n\n"
