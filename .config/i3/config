@@ -180,7 +180,7 @@ bar {
 }
 
 # Background
-exec --no-startup-id feh --bg-scale $HOME/Pictures
+exec --no-startup-id feh --bg-scale $HOME/.config/i3/backgrounds
 
 # Gaps
 gaps inner 7px
