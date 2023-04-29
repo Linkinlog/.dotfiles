@@ -140,8 +140,8 @@ install_rust() {
         curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y >/dev/null
         printf "\r\e[K\e[32m✅ Rust stable installed. Continuing...\e[0m"
     fi
-    rustup default "$toolchain"
-    rustup update
+    rustup default "$toolchain" >/dev/null 2>&1
+    rustup update >/dev/null 2>&1
     printf "\r\e[K\e[32m✅ Rust stable updated. Continuing...\e[0m"
 }
 
@@ -245,8 +245,11 @@ install_go_tools() {
         )
 
         for tool in "${go_tools[@]}"; do
-            GO111MODULE=on go install "$tool" >/dev/null
+            exec_name=$(basename "${tool%@*}")
+            if ! type "$exec_name" >/dev/null 2>&1; then
                 printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
+                GO111MODULE=on go install "$tool" >/dev/null
+            fi
         done
     fi
     printf "\r\e[K\e[32m✅ Go tools installed/updated. Continuing...\e[0m"
@@ -263,15 +266,15 @@ install_terminal_tools() {
     printf "\r\e[K\e[34m🛠️ Installing TPM and Packer...\e[0m"
 
     if [ -d "$packer_dir" ]; then
-        git -C "$packer_dir" pull >/dev/null
+        git -C "$packer_dir" pull -q >/dev/null
     else
-        git clone --depth 1 "$packer_repo" "$packer_dir" >/dev/null
+        git clone -q --depth 1 "$packer_repo" "$packer_dir" >/dev/null
     fi
 
     if [ -d "$tpm_dir" ]; then
-        git -C "$tpm_dir" pull >/dev/null
+        git -C "$tpm_dir" pull -q >/dev/null
     else
-        git clone "$tpm_repo" "$tpm_dir" >/dev/null
+        git clone -q "$tpm_repo" "$tpm_dir" >/dev/null
     fi
 
 printf "\r\e[K\e[32m✅ Packer and TPM should be installed! \e[33mBe sure to run <prefix>+I to install TPM plugins.\e[32m Continuing...\e[0m"
@@ -331,12 +334,12 @@ install_neovim() {
     printf "\r\e[K\e[34m🛠️ Installing Neovim...\e[0m"
 
     if [ -d "$neovim_dir" ]; then
-        git -C "$neovim_dir" pull >/dev/null
         printf "\r\e[K\e[34m🛠️ Neovim build directory found, updating...\e[0m"
+        git -C "$neovim_dir" pull -q >/dev/null
         rm -rf "$neovim_dir/build" >/dev/null
     else
-        git clone --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
         printf "\r\e[K\e[34m🛠️ Neovim build not directory found, cloning...\e[0m"
+        git clone -q --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
     fi
     printf "\r\e[K\e[34m🛠️ Making Neovim...\e[0m"
     cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo >/dev/null
@@ -351,39 +354,31 @@ install_neovim() {
 
 # Tools provided by pip/npm
 install_neovim_tools() {
-    if ! command -v pip3 >/dev/null 2>&1; then
-        exit 1
-    fi
-
-    if ! command -v npm >/dev/null 2>&1; then
-        exit 1
-    fi
-
-    if pip3 list | grep -q neovim; then
+    if pip3 list 2>/dev/null | grep -q neovim; then
         printf "\r\e[K\e[32m✅ Neovim is installed with pip3. Continuing...\e[0m"
     else
         pip3 install neovim >/dev/null
     fi
 
-    if pip3 list | grep -q autopep8; then
+    if pip3 list 2>/dev/null | grep -q autopep8; then
         printf "\r\e[K\e[32m✅ Autopep8 is installed with pip3. Continuing... \e[0m"
     else
         pip3 install autopep8 >/dev/null
     fi
 
-    if npm list -g --depth=0 | grep -q remark; then
+    if npm list -g --depth=0 2>/dev/null | grep -q remark; then
         printf "\r\e[K\e[32m✅ Remark is installed globally with npm. Continuing...\e[0m"
     else
         sudo npm install -g remark >/dev/null
     fi
 
-    if npm list -g --depth=0 | grep -q neovim; then
+    if npm list -g --depth=0 2>/dev/null | grep -q neovim; then
         printf "\r\e[K\e[32m✅ Neovim is installed globally with npm. Continuing...\e[0m"
     else
         sudo npm install -g neovim >/dev/null
     fi
 
-    if gem list -i neovim; then
+    if gem list -i neovim >/dev/null 2>&1; then
         printf "\r\e[K\e[32m✅ Neovim is installed with gem. Continuing...\e[0m"
     else
         sudo gem install neovim >/dev/null
@@ -470,13 +465,13 @@ setup_git_repo() {
         eval "$config_cmd" checkout >/dev/null
     fi
 
-    eval "$config_cmd" fetch origin development >/dev/null
-    eval "$config_cmd" merge development >/dev/null
+    eval "$config_cmd" fetch -q origin development >/dev/null
+    eval "$config_cmd" merge -q development >/dev/null
     eval "$config_cmd" config --local status.showUntrackedFiles no
     printf "\r\e[K\e[34m🛠️ Setting up bare repo's submodules... \e[0m"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
-    nvim -c 'PackerSync' -c 'autocmd User PackerComplete qa'
     printf "\r\e[K\e[34m🛠️ Installing our neovim plugins... \e[0m"
+    nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
     printf "\r\e[K\e[32m✅ Dotfiles repo setup finished. Continuing...\e[0m"
 }
 
@@ -494,15 +489,14 @@ setup_ohmyzsh() {
         }
         sudo chsh -s "$(which zsh)" -u "$(whoami)"
     else
-        git -C "$HOMEDIR/.oh-my-zsh" pull >/dev/null
+        git -C "$HOMEDIR/.oh-my-zsh" pull -q >/dev/null
     fi
 
     local zsh_syntax_highlighting_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
     if [ -d "$zsh_syntax_highlighting_path" ]; then
-        git -C "$zsh_syntax_highlighting_path" pull >/dev/null
+        git -C "$zsh_syntax_highlighting_path" pull -q >/dev/null
     else
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || {
-            printf "Error: could not clone zsh-syntax-highlighting \n\n"
+        git clone -q https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || {
             printf "\r\e[K\e[31m❌ Error: could not clone zsh-syntax-highlighting Exiting... \e[0m"
             exit 1
         } >/dev/null
@@ -510,10 +504,9 @@ setup_ohmyzsh() {
 
     local zsh_autosuggestions_path="${ZSH_CUSTOM:-$HOMEDIR/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
     if [ -d "$zsh_autosuggestions_path" ]; then
-        git -C "$zsh_autosuggestions_path" pull >/dev/null
+        git -C "$zsh_autosuggestions_path" pull -q >/dev/null
     else
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || {
-            printf "Error: could not clone zsh-autosuggestions \n\n"
+        git clone -q https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || {
             printf "\r\e[K\e[31m❌ Error: could not clone zsh-autosuggestions Exiting... \e[0m"
             exit 1
         } >/dev/null
