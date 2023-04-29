@@ -23,37 +23,37 @@ readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" 
 
 # Ensure all dependencies are here after installation
 check_dependencies() {
-    printf "Checking dependencies...\n\n"
+    printf "\r\e[K\e[34m🛠️ Checking dependencies...\e[0m"
     if ! git --version >/dev/null 2>&1; then
-        printf "Git is not installed. Please install Git and try again.\n\n"
+        printf "\r\e[K\e[31m❌ Git is not installed. Please install Git and try again. Exiting... \e[0m"
         exit 1
     fi
 
     if ! curl --version >/dev/null 2>&1; then
-        printf "Curl is not installed. Please install Curl and try again.\n\n"
+        printf "\r\e[K\e[31m❌ Curl is not installed. Please install Curl and try again. Exiting... \e[0m"
         exit 1
     fi
 
     if ! wget --version >/dev/null 2>&1; then
-        printf "Wget is not installed. Please install Wget and try again.\n\n"
+        printf "\r\e[K\e[31m❌ Wget is not installed. Please install Wget and try again. Exiting... \e[0m"
         exit 1
     fi
 
     if ! unzip -v >/dev/null 2>&1; then
-        printf "Unzip is not installed. Please install Unzip and try again.\n\n"
+        printf "\r\e[K\e[31m❌ Unzip is not installed. Please install Unzip and try again. Exiting... \e[0m"
         exit 1
     fi
 
     if ! dpkg -s build-essential >/dev/null 2>&1; then
-        printf "Build-essential is not installed. Please install Build-essential and try again.\n\n"
+        printf "\r\e[K\e[31m❌ Build-essential is not installed. Please install Build-essential and try again. Exiting... \e[0m"
         exit 1
     fi
-    printf "All dependencies set. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ All dependencies set. Continuing...\e[0m"
 }
 
 # Refresh sudo auth so we can ask for password less
 refresh_sudo() {
-    printf "Refreshing sudo authentication... \n\n"
+    printf "\r\e[K\e[34m🛠️ Refreshing sudo authentication... \e[0m"
     sudo -v
 }
 
@@ -65,7 +65,7 @@ install_packages() {
     local install_cmd="install"
     local package_list=("$@")
 
-    printf "Determining package manager... \n\n"
+    printf "\r\e[K\e[34m🛠️ Determining package manager... \e[0m"
     if command -v apt-get >/dev/null 2>&1; then
         package_manager="apt-get"
         opts=(-y -qq)
@@ -84,50 +84,50 @@ install_packages() {
         package_manager="zypper"
         opts=(--non-interactive --quiet)
     else
-        printf "No supported package manager found.\n\n"
+        printf "\r\e[K\e[31m❌ No supported package manager found. Exiting... \e[0m"
         exit 1
     fi
 
-    printf "Using %s as package manager and updating...\n\n" "$package_manager"
+    printf "\r\e[K\e[34m🛠️ Using %s as package manager and updating...\e[0m" "$package_manager"
     sudo "$package_manager" "${opts[@]}" "$update_cmd"
     sudo "$package_manager" "${opts[@]}" "$install_cmd" "${package_list[@]}"
-    printf "All packages installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ All packages installed. Continuing...\e[0m"
 }
 
 add_ms_repo() {
     local deb_output=packages-microsoft-prod.deb
     local microsoft_deb
     if [ -e "$deb_output" ]; then
-        printf "Microsoft deb found. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Microsoft deb found. Continuing...\e[0m"
         return 0
     fi
     microsoft_deb=https://packages.microsoft.com/config/ubuntu/"$(lsb_release -rs)"/packages-microsoft-prod.deb
     if output=$(sudo wget -q -O "$deb_output" "$microsoft_deb" 2>&1); then
-        printf "Installing powershell dependency. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Installing powershell dependency. Continuing...\e[0m"
         sudo dpkg -i packages-microsoft-prod.deb
     else
-        printf "Error occurred: %s\n" "$output"
+        printf "\r\e[K\e[31m❌ Error occurred: %s Exiting... \e[0m" "$output"
         exit 1
     fi
-    printf "Powershell all set to be installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Powershell all set to be installed. Continuing...\e[0m"
 }
 
 ## Setting up brave gpg key
 add_brave_repo() {
-    printf "Adding Brave GPG key if needed...\n\n"
+    printf "\r\e[K\e[34m🛠️ Adding Brave GPG key if needed...\e[0m"
     local gpg_output=/usr/share/keyrings/brave-browser-archive-keyring.gpg
     if [ -e "$gpg_output" ]; then
-        printf "Brave gpg keyring found. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Brave gpg keyring found. Continuing...\e[0m"
         return 0
     fi
     local brave_gpg=https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     if output=$(sudo wget -O "$gpg_output" "$brave_gpg" 2>&1); then
         echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo bash -c 'cat > /etc/apt/sources.list.d/brave-browser-release.list'
     else
-        printf "Error occurred: %s\n" "$output"
+        printf "\r\e[K\e[31m❌ Error occurred: %s Exiting... \e[0m" "$output"
         exit 1
     fi
-    printf "Brave all set to be installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Brave all set to be installed. Continuing...\e[0m"
 }
 
 # Use Rustup to install Rust stable
@@ -136,30 +136,29 @@ install_rust() {
     local profile="${RUST_PROFILE:-minimal}"
     local toolchain="${RUST_TOOLCHAIN:-stable}"
     if ! command -v rustc >/dev/null 2>&1; then
-        printf "Installing Rust stable with Rustup...\n\n"
+        printf "\r\e[K\e[34m🛠️ Installing Rust stable with Rustup...\e[0m"
         curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y >/dev/null
-        printf "Rust stable installed. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Rust stable installed. Continuing...\e[0m"
     fi
     rustup default "$toolchain"
     rustup update
-    printf "Rust stable updated. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Rust stable updated. Continuing...\e[0m"
 }
 
 # Installing various cargo tools
 # for now just tree-sitter.
 install_rust_tools() {
-    printf "Installing tree-sitter-cli with Cargo...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing tree-sitter-cli with Cargo...\e[0m"
     # Add Rust to PATH (taken from .cargo/env)
     export PATH="$HOMEDIR/.cargo/bin:$PATH"
     if ! command -v cargo >/dev/null 2>&1; then
-        printf "Cargo not found...exiting\n\n"
+        printf "\r\e[K\e[31m❌ Cargo not found. Exiting... \e[0m"
         exit 1
     fi
     if ! command -v tree-sitter >/dev/null 2>&1; then
         cargo install tree-sitter-cli >/dev/null
-        printf "tree-sitter-cli installed \n\n"
     fi
-    printf "tree-sitter-cli installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Tree-sitter-cli installed. Continuing...\e[0m"
 }
 
 # Installing our terminal emulator, wezterm
@@ -171,17 +170,17 @@ install_wezterm() {
     if command -v wezterm >/dev/null 2>&1; then
         installed_version=$(wezterm -V | awk '{print $2}')
         if [ "$installed_version" = "$wezterm_version" ]; then
-            printf "Wezterm is installed and up to date. Continuing...\n\n"
+            printf "\r\e[K\e[32m✅ Wezterm is installed and up to date. Continuing...\e[0m"
             return 0
         fi
     fi
-    printf "Installing WezTerm version %s...\n\n" "$wezterm_version"
+    printf "\r\e[K\e[34m🛠️ Installing WezTerm version %s...\e[0m" "$wezterm_version"
     if output=$(curl -LO "https://github.com/wez/wezterm/releases/download/${wezterm_version}/wezterm-${wezterm_version}.Ubuntu${release}.deb" 2>&1); then
         sudo apt-get install -yq "./wezterm-${wezterm_version}.Ubuntu${release}.deb" >/dev/null
     else
-        printf "Error occured: %s\n" "$output"
+        printf "\r\e[K\e[31m❌ Error occured: %s Exiting... \e[0m" "$output"
     fi
-    printf "Wezterm installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Wezterm installed. Continuing...\e[0m"
 }
 
 # Installing Go from source and deleting old copies
@@ -194,24 +193,24 @@ install_go() {
     go_install_path="$HOME/${go_version}.${arch}.tar.gz"
 
     if command -v go >/dev/null 2>&1 && [[ "$(go version | awk '{print $3}')" == "$go_version" ]]; then
-        printf "Go version %s is already installed\n\n" "$go_version"
+        printf "\r\e[K\e[32m✅ Go version %s is already installed. Continuing... \e[0m" "$go_version"
         return 0
     fi
 
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
-        printf "Installing Go version %s to %s\n\n" "$go_version" "$go_install_path"
+        printf "\r\e[K\e[34m🛠️ Installing Go version %s to %s... \e[0m" "$go_version" "$go_install_path"
         sudo rm -rf /usr/local/go &&
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
     else
-        printf "Error occurred: %s\n" "$output"
+        printf "\r\e[K\e[31m❌ Error occurred: %s. Exiting... \e[0m" "$output"
         exit 1
     fi
-    printf "Go installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Go installed. Continuing...\e[0m"
 }
 
 # Install all recommended Go tools
 install_go_tools() {
-    printf "Installing/updating Go tools...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing/updating Go tools...\e[0m"
     if command -v go >/dev/null 2>&1; then
         local go_tools=(
             "github.com/ChimeraCoder/gojson/gojson@latest"
@@ -246,11 +245,11 @@ install_go_tools() {
         )
 
         for tool in "${go_tools[@]}"; do
-            printf "Installing/updating %s...\n" "${tool%@*}"
             GO111MODULE=on go install "$tool" >/dev/null
+                printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
         done
     fi
-    printf "Go tools installed/updated. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Go tools installed/updated. Continuing...\e[0m"
 }
 
 # We use packer for plugin management in Neovim, so install that.
@@ -261,7 +260,7 @@ install_terminal_tools() {
     local tpm_repo="https://github.com/tmux-plugins/tpm"
     local tpm_dir="$HOMEDIR/.tmux/plugins/tpm"
 
-    printf "Installing TPM and Packer...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing TPM and Packer...\e[0m"
 
     if [ -d "$packer_dir" ]; then
         git -C "$packer_dir" pull >/dev/null
@@ -275,7 +274,7 @@ install_terminal_tools() {
         git clone "$tpm_repo" "$tpm_dir" >/dev/null
     fi
 
-    printf "Packer and TPM should be installed! Be sure to run <prefix>+I to install TPM plugins. Continuing...\n\n"
+printf "\r\e[K\e[32m✅ Packer and TPM should be installed! \e[33mBe sure to run <prefix>+I to install TPM plugins.\e[32m Continuing...\e[0m"
 }
 
 # Lazygit makes working with Git in the CLI much nicer, so install it.
@@ -284,33 +283,34 @@ install_lazygit() {
     lazygit_version=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
 
     if command -v lazygit >/dev/null 2>&1 && [[ "$lazygit_version" == "$(lazygit -v | grep -oP '(?<=, )version=\K[^,]*')" ]]; then
-        printf "Lazygit version %s is already installed\n\n" "$lazygit_version"
+        printf "\r\e[K\e[32m✅ Lazygit version %s is already installed. Continuing... \e[0m" "$lazygit_version"
         return 0
     fi
 
-    printf "Installing lazygit...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing lazygit...\e[0m"
     if output=$(curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${lazygit_version}_Linux_x86_64.tar.gz" 2>&1); then
         tar xf lazygit.tar.gz lazygit
         sudo install lazygit /usr/local/bin
-        printf "Installed Lazygit. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Installed Lazygit. Continuing...\e[0m"
     else
-        printf "Failed cURL'ing lazygit \n\n"
+        printf "\r\e[K\e[31m❌ Failed cURL'ing lazygit. Exiting... \e[0m"
+        return 1
     fi
 }
 
 # Lazydocker makes working with Docker in the CLI much nicer, so install it.
 install_lazydocker() {
     if command -v lazydocker >/dev/null 2>&1; then
-        printf "Lazydocker already installed. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Lazydocker already installed. Continuing...\e[0m"
         return 0
     fi
-    printf "Installing Lazydocker...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing Lazydocker...\e[0m"
     if output=$(curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash 2>&1); then
-        printf "Installed Lazydocker \n\n"
+        printf "\r\e[K\e[32m✅ Installed Lazydocker. Continuing... \e[0m"
     else
-        printf "Error: Failed to install Lazydocker\n\n"
+        printf "\r\e[K\e[32m✅ Error: Failed to install Lazydocker. Continuing... \e[0m"
     fi
-    printf "Installed Lazydocker. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ Installed Lazydocker. Continuing...\e[0m"
 }
 
 # I cant write code without vim, apologies
@@ -323,102 +323,99 @@ install_neovim() {
         latest_version=$(curl -s https://api.github.com/repos/neovim/neovim/releases/tags/nightly | grep -oP 'NVIM v\K[\d.]+')
 
         if [ "$installed_version" = "$latest_version" ]; then
-            printf "Neovim is already up-to-date. Continuing...\n\n"
+            printf "\r\e[K\e[32m✅ Neovim is already up-to-date. Continuing...\e[0m"
             return 0
         fi
     fi
 
-    printf "Installing Neovim...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing Neovim...\e[0m"
 
     if [ -d "$neovim_dir" ]; then
-        printf "Neovim build directory found, updating...\n\n"
         git -C "$neovim_dir" pull >/dev/null
+        printf "\r\e[K\e[34m🛠️ Neovim build directory found, updating...\e[0m"
         rm -rf "$neovim_dir/build" >/dev/null
     else
-        printf "Neovim build not directory found, cloning...\n\n"
         git clone --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
+        printf "\r\e[K\e[34m🛠️ Neovim build not directory found, cloning...\e[0m"
     fi
-    printf "Making Neovim...\n\n"
+    printf "\r\e[K\e[34m🛠️ Making Neovim...\e[0m"
     cd "$neovim_dir" && make CMAKE_BUILD_TYPE=RelWithDebInfo >/dev/null
-    printf "Installing Neovim...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing Neovim...\e[0m"
     sudo make install >/dev/null || {
-        printf "Error: failed installing Neovim \n\n"
-        exit 1
+        printf "\r\e[K\e[31m❌ Error: failed installing Neovim. Exiting... \e[0m"
+        return 1
     }
     nvim -c 'TSUpdate' -c 'qa' >/dev/null
-    printf "Installed Neovim %s. Continuing...\n\n" "$(nvim --version | head -n 1 | awk '{print $2}')"
+    printf "\r\e[K\e[32m✅ Installed Neovim %s. Continuing...\e[0m" "$(nvim --version | head -n 1 | awk '{print $2}')"
 }
 
 # Tools provided by pip/npm
 install_neovim_tools() {
-    printf "Installing Pip-NPM tools...\n\n"
     if ! command -v pip3 >/dev/null 2>&1; then
-        printf "Pip3 not found...exiting \n\n"
         exit 1
     fi
 
     if ! command -v npm >/dev/null 2>&1; then
-        printf "NPM not found...exiting \n\n"
         exit 1
     fi
 
     if pip3 list | grep -q neovim; then
-        printf "Neovim is installed with pip3. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Neovim is installed with pip3. Continuing...\e[0m"
     else
         pip3 install neovim >/dev/null
     fi
 
     if pip3 list | grep -q autopep8; then
-        printf "autopep8 is installed with pip3"
+        printf "\r\e[K\e[32m✅ Autopep8 is installed with pip3. Continuing... \e[0m"
     else
         pip3 install autopep8 >/dev/null
     fi
 
     if npm list -g --depth=0 | grep -q remark; then
-        printf "Remark is installed globally with npm. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Remark is installed globally with npm. Continuing...\e[0m"
     else
         sudo npm install -g remark >/dev/null
     fi
 
     if npm list -g --depth=0 | grep -q neovim; then
-        printf "Neovim is installed globally with npm. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Neovim is installed globally with npm. Continuing...\e[0m"
     else
         sudo npm install -g neovim >/dev/null
     fi
 
     if gem list -i neovim; then
-        printf "Neovim is installed with gem. Continuing...\n\n"
+        printf "\r\e[K\e[32m✅ Neovim is installed with gem. Continuing...\e[0m"
     else
         sudo gem install neovim >/dev/null
     fi
-    printf "Pip/NPM tools installed. Continuing...\n\n"
 }
 
 # Change the hostname to whatever was set
 set_hostname() {
     if [ "$HOSTNAME" == "" ]; then
-        printf "Skipping hostname config...\n\n"
+        printf "\r\e[K\e[34m🛠️ Skipping hostname config...\e[0m"
         return 0
     fi
     sudo su -c "echo '$HOSTNAME' > /etc/hostname"
     export HOST=$HOSTNAME
-    printf "Hostname set to %s. Continuing...\n\n" "$HOSTNAME"
+    printf "\r\e[K\e[32m✅ Hostname set to %s. Continuing...\e[0m" "$HOSTNAME"
 }
 
 # Configure local git
 config_git() {
     if [ "$GIT_EMAIL" == "" ] || [ "$GIT_USER" == "" ]; then
-        printf "Skipping git config...\n\n"
+        printf "\r\e[K\e[34m🛠️ Skipping git config...\e[0m"
         return 0
     fi
     git config --global user.email "$GIT_EMAIL"
     git config --global user.name "$GIT_USER"
-    printf "Git configured to use %s as email and %s as user. Continuing...\n\n" "$GIT_EMAIL" "$GIT_USER"
+    printf "\r\e[K\e[32m✅ Git configured to use %s as email and %s as user. Continuing...\e[0m" "$GIT_EMAIL" "$GIT_USER"
 }
 
 # Use systemd to start and enable ssh so we can connect
 start_enable_ssh() {
     # Check if the service is enabled
+    printf "\r\e[K\e[34m🛠️ Starting and enabling SSH...\e[0m"
     if ! systemctl is-enabled ssh >/dev/null 2>&1; then
         sudo systemctl enable ssh >/dev/null 2>&1
     fi
@@ -428,7 +425,7 @@ start_enable_ssh() {
         sudo systemctl start ssh >/dev/null 2>&1
     fi
 
-    printf "SSH started and enabled. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ SSH started and enabled. Continuing...\e[0m"
 }
 
 install_composer() {
@@ -441,29 +438,29 @@ install_composer() {
 # Necessary since we use git submodules with SSH
 setup_github() {
     if [ "$GH_PERSONAL_TOKEN" == "" ]; then
-        printf "Skipping GH auth...\n\n"
+        printf "\r\e[K\e[34m🛠️ Skipping GH auth...\e[0m"
         return 0
     fi
-    printf "Setting up GitHub...\n\n"
+    printf "\r\e[K\e[34m🛠️ Setting up GitHub...\e[0m"
 
     if ! gh auth status >/dev/null 2>&1; then
-        printf "Adding Token %s \n\n" "$GH_PERSONAL_TOKEN"
+        printf "\r\e[K\e[34m🛠️ Adding Token %s... \e[0m" "$GH_PERSONAL_TOKEN"
         gh auth login --with-token <<<"$GH_PERSONAL_TOKEN"
     fi
 
     if [ ! -f "$HOME/.ssh/github" ]; then
         # Make new ssh key for gh
-        printf "Creating ssh key for GitHub for %s...\n\n" "$HOST"
+        printf "\r\e[K\e[34m🛠️ Creating ssh key for GitHub for %s...\e[0m" "$HOST"
         ssh-keygen -f ~/.ssh/github -N ""
-        printf "Adding ssh key to github\n\n"
+        printf "\r\e[K\e[34m🛠️ Adding ssh key to github... \e[0m"
         gh ssh-key add "$HOMEDIR/.ssh/github.pub" --title "$HOST"
     fi
-    printf "GitHub setup finished. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ GitHub setup finished. Continuing...\e[0m"
 }
 
 # Heres the meat and potatoes, our bare repo will be unpacked
 setup_git_repo() {
-    printf "Setting up Git repo \n\n"
+    printf "\r\e[K\e[34m🛠️ Setting up Git repo... \e[0m"
     local dotfiles_repo="https://github.com/linkinlog/.dotfiles"
     local dotfiles_dir="$HOMEDIR/.dotfiles.git"
     local config_cmd="git --git-dir=$dotfiles_dir --work-tree=$HOMEDIR"
@@ -476,23 +473,23 @@ setup_git_repo() {
     eval "$config_cmd" fetch origin development >/dev/null
     eval "$config_cmd" merge development >/dev/null
     eval "$config_cmd" config --local status.showUntrackedFiles no
-    printf "Setting up bare repo's submodules \n\n"
+    printf "\r\e[K\e[34m🛠️ Setting up bare repo's submodules... \e[0m"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
-    printf "Installing our neovim plugins\n\n"
     nvim -c 'PackerSync' -c 'autocmd User PackerComplete qa'
-    printf "dotfiles repo setup finished. Continuing...\n\n"
+    printf "\r\e[K\e[34m🛠️ Installing our neovim plugins... \e[0m"
+    printf "\r\e[K\e[32m✅ Dotfiles repo setup finished. Continuing...\e[0m"
 }
 
 # Mainly just for the theme, hoping to phase out at some point
 setup_ohmyzsh() {
-    printf "Setting up OhMyZsh\n\n"
+    printf "\r\e[K\e[34m🛠️ Setting up OhMyZsh... \e[0m"
 
     if [ ! -d "$HOMEDIR/.oh-my-zsh" ]; then
         export RUNZSH=no
         export KEEP_ZSHRC=yes
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
             "" --unattended || {
-            printf "Error: could not install OhMyZsh \n\n"
+            printf "\r\e[K\e[31m❌ Error: could not install OhMyZsh. Exiting... \e[0m"
             exit 1
         }
         sudo chsh -s "$(which zsh)" -u "$(whoami)"
@@ -506,6 +503,7 @@ setup_ohmyzsh() {
     else
         git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_syntax_highlighting_path" || {
             printf "Error: could not clone zsh-syntax-highlighting \n\n"
+            printf "\r\e[K\e[31m❌ Error: could not clone zsh-syntax-highlighting Exiting... \e[0m"
             exit 1
         } >/dev/null
     fi
@@ -516,10 +514,11 @@ setup_ohmyzsh() {
     else
         git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_autosuggestions_path" || {
             printf "Error: could not clone zsh-autosuggestions \n\n"
+            printf "\r\e[K\e[31m❌ Error: could not clone zsh-autosuggestions Exiting... \e[0m"
             exit 1
         } >/dev/null
     fi
-    printf "OhMyZsh, zsh-syntax-highlighting, and zsh-autosuggestions installed. Continuing...\n\n"
+    printf "\r\e[K\e[32m✅ OhMyZsh, zsh-syntax-highlighting, and zsh-autosuggestions installed. Continuing...\e[0m"
 }
 
 # Group the dependency commands together
@@ -560,7 +559,7 @@ main() {
     cd "$HOME"
     install_dependencies
     configure_environment
-    printf "Should be all set, good luck!!\n"
+    printf "\r\e[K\e[32m✅ Should be all set, good luck!!\n\e[0m"
 }
 
 main "$@"
