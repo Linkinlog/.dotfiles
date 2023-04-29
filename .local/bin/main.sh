@@ -89,7 +89,7 @@ install_packages() {
     fi
 
     printf "Using %s as package manager and updating...\n\n" "$package_manager"
-    sudo "$package_manager" "${opts[@]}" "$update_cmd" 
+    sudo "$package_manager" "${opts[@]}" "$update_cmd"
     sudo "$package_manager" "${opts[@]}" "$install_cmd" "${package_list[@]}"
     printf "All packages installed. Continuing...\n\n"
 }
@@ -345,28 +345,53 @@ install_neovim() {
         printf "Error: failed installing Neovim \n\n"
         exit 1
     }
+    nvim -c 'TSUpdate' -c 'qa' >/dev/null
     printf "Installed Neovim %s. Continuing...\n\n" "$(nvim --version | head -n 1 | awk '{print $2}')"
 }
 
-# :checkhealth says I need python I guess
+# Tools provided by pip/npm
 install_neovim_tools() {
-    printf "Installing Python-Neovim...\n\n"
+    printf "Installing Pip-NPM tools...\n\n"
     if ! command -v pip3 >/dev/null 2>&1; then
         printf "Pip3 not found...exiting \n\n"
         exit 1
     fi
+
     if ! command -v npm >/dev/null 2>&1; then
         printf "NPM not found...exiting \n\n"
         exit 1
     fi
-    pip3 install neovim >/dev/null
-    pip3 install autopep8 >/dev/null
-    pip3 install pint >/dev/null
-    sudo npm install -g neovim >/dev/null
-    sudo npm install -g remark >/dev/null
-    sudo gem install neovim >/dev/null
-    nvim -c 'TSUpdate' -c 'qa' >/dev/null
-    printf "Installed Python-Neovim. Continuing...\n\n"
+
+    if pip3 list | grep -q neovim; then
+        printf "Neovim is installed with pip3. Continuing...\n\n"
+    else
+        pip3 install neovim >/dev/null
+    fi
+
+    if pip3 list | grep -q autopep8; then
+        printf "autopep8 is installed with pip3"
+    else
+        pip3 install autopep8 >/dev/null
+    fi
+
+    if npm list -g --depth=0 | grep -q remark; then
+        printf "Remark is installed globally with npm. Continuing...\n\n"
+    else
+        sudo npm install -g remark >/dev/null
+    fi
+
+    if npm list -g --depth=0 | grep -q neovim; then
+        printf "Neovim is installed globally with npm. Continuing...\n\n"
+    else
+        sudo npm install -g neovim >/dev/null
+    fi
+
+    if gem list -i neovim; then
+        printf "Neovim is installed with gem. Continuing...\n\n"
+    else
+        sudo gem install neovim >/dev/null
+    fi
+    printf "Pip/NPM tools installed. Continuing...\n\n"
 }
 
 # Change the hostname to whatever was set
