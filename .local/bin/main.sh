@@ -248,7 +248,7 @@ install_go_tools() {
             exec_name=$(basename "${tool%@*}")
             if ! type "$exec_name" >/dev/null 2>&1; then
                 printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
-                GO111MODULE=on go install "$tool" >/dev/null
+                GO111MODULE=on sudo go install "$tool" >/dev/null
             fi
         done
     fi
