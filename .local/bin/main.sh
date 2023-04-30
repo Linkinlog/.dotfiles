@@ -211,47 +211,49 @@ install_go() {
 # Install all recommended Go tools
 install_go_tools() {
     printf "\r\e[K\e[34m🛠️ Installing/updating Go tools...\e[0m"
-    if command -v go >/dev/null 2>&1; then
-        local go_tools=(
-            "github.com/ChimeraCoder/gojson/gojson@latest"
-            "github.com/abenz1267/gomvp@latest"
-            "github.com/alvaroloes/enumer@latest"
-            "github.com/cweill/gotests/gotests@latest"
-            "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
-            "github.com/fatih/errwrap@latest"
-            "github.com/fatih/gomodifytags@latest"
-            "github.com/go-delve/delve/cmd/dlv@latest"
-            "github.com/godoctor/godoctor@latest"
-            "github.com/golang/mock/mockgen@latest"
-            "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
-            "github.com/jimmyfrasche/closed/cmds/fillswitch@latest"
-            "github.com/josharian/impl@latest"
-            "github.com/koron/iferr@latest"
-            "github.com/kyoh86/richgo@latest"
-            "github.com/ofabry/go-callvis@latest"
-            "github.com/onsi/ginkgo/ginkgo@latest"
-            "github.com/rogpeppe/godef@latest"
-            "github.com/searKing/golang/tools/go-enum@latest"
-            "github.com/segmentio/golines@latest"
-            "github.com/tmc/json-to-struct@latest"
-            "github.com/uber/go-torch@latest"
-            "golang.org/x/tools/cmd/callgraph@latest"
-            "golang.org/x/tools/cmd/goimports@latest"
-            "golang.org/x/tools/cmd/gorename@latest"
-            "golang.org/x/tools/cmd/guru@latest"
-            "golang.org/x/vuln/cmd/govulncheck@latest"
-            "gotest.tools/gotestsum@latest"
-            "mvdan.cc/gofumpt@latest"
-        )
-
-        for tool in "${go_tools[@]}"; do
-            exec_name=$(basename "${tool%@*}")
-            if ! type "$exec_name" >/dev/null 2>&1; then
-                printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
-                GO111MODULE=on sudo go install "$tool" >/dev/null
-            fi
-        done
+    if ! command -v go >/dev/null 2>&1; then
+        printf "\r\e[K\e[31m❌ Error occurred: go not found. Exiting... \e[0m"
+        return 1
     fi
+    local go_tools=(
+        "github.com/ChimeraCoder/gojson/gojson@latest"
+        "github.com/abenz1267/gomvp@latest"
+        "github.com/alvaroloes/enumer@latest"
+        "github.com/cweill/gotests/gotests@latest"
+        "github.com/davidrjenni/reftools/cmd/fillstruct@latest"
+        "github.com/fatih/errwrap@latest"
+        "github.com/fatih/gomodifytags@latest"
+        "github.com/go-delve/delve/cmd/dlv@latest"
+        "github.com/godoctor/godoctor@latest"
+        "github.com/golang/mock/mockgen@latest"
+        "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+        "github.com/jimmyfrasche/closed/cmds/fillswitch@latest"
+        "github.com/josharian/impl@latest"
+        "github.com/koron/iferr@latest"
+        "github.com/kyoh86/richgo@latest"
+        "github.com/ofabry/go-callvis@latest"
+        "github.com/onsi/ginkgo/ginkgo@latest"
+        "github.com/rogpeppe/godef@latest"
+        "github.com/searKing/golang/tools/go-enum@latest"
+        "github.com/segmentio/golines@latest"
+        "github.com/tmc/json-to-struct@latest"
+        "github.com/uber/go-torch@latest"
+        "golang.org/x/tools/cmd/callgraph@latest"
+        "golang.org/x/tools/cmd/goimports@latest"
+        "golang.org/x/tools/cmd/gorename@latest"
+        "golang.org/x/tools/cmd/guru@latest"
+        "golang.org/x/vuln/cmd/govulncheck@latest"
+        "gotest.tools/gotestsum@latest"
+        "mvdan.cc/gofumpt@latest"
+    )
+
+    for tool in "${go_tools[@]}"; do
+        exec_name=$(basename "${tool%@*}")
+        if ! type "$exec_name" >/dev/null 2>&1; then
+            printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
+            GO111MODULE=on sudo /usr/local/go/bin/go install "$tool" >/dev/null
+        fi
+    done
     printf "\r\e[K\e[32m✅ Go tools installed/updated. Continuing...\e[0m"
 }
 
@@ -277,7 +279,7 @@ install_terminal_tools() {
         git clone -q "$tpm_repo" "$tpm_dir" >/dev/null
     fi
 
-printf "\r\e[K\e[32m✅ Packer and TPM should be installed! \e[33mBe sure to run <prefix>+I to install TPM plugins.\e[32m Continuing...\e[0m"
+    printf "\r\e[K\e[32m✅ Packer and TPM should be installed! \e[33mBe sure to run <prefix>+I to install TPM plugins.\e[32m Continuing...\e[0m"
 }
 
 # Lazygit makes working with Git in the CLI much nicer, so install it.
