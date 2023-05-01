@@ -470,6 +470,7 @@ setup_git_repo() {
     eval "$config_cmd" fetch -q origin development >/dev/null
     eval "$config_cmd" merge -q development >/dev/null
     eval "$config_cmd" config --local status.showUntrackedFiles no
+    eval "$config_cmd" config --global submodule.recurse true
     printf "\r\e[K\e[34m🛠️ Setting up bare repo's submodules... \e[0m"
     GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' eval "$config_cmd" submodule update --init --remote >/dev/null
     printf "\r\e[K\e[34m🛠️ Installing our neovim plugins... \e[0m"
