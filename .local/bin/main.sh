@@ -250,8 +250,8 @@ install_go_tools() {
     for tool in "${go_tools[@]}"; do
         exec_name=$(basename "${tool%@*}")
         if ! type "$exec_name" >/dev/null 2>&1; then
-            printf "\r\e[K\e[34m🛠️ Installing/updating %s...\n\e[0m" "${tool%@*}"
-            GO111MODULE=on sudo /usr/local/go/bin/go install "$tool" >/dev/null
+            printf "\r\e[K\e[34m🛠️ Installing/updating %s...\e[0m" "${tool%@*}"
+            GO111MODULE=on go install "$tool" >/dev/null
         fi
     done
     printf "\r\e[K\e[32m✅ Go tools installed/updated. Continuing...\e[0m"
