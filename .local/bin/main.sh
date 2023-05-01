@@ -156,7 +156,7 @@ install_rust_tools() {
         exit 1
     fi
     if ! command -v tree-sitter >/dev/null 2>&1; then
-        cargo install tree-sitter-cli >/dev/null
+        cargo install -q tree-sitter-cli >/dev/null
     fi
     printf "\r\e[K\e[32m✅ Tree-sitter-cli installed. Continuing...\e[0m"
 }
@@ -294,8 +294,8 @@ install_lazygit() {
 
     printf "\r\e[K\e[34m🛠️ Installing lazygit...\e[0m"
     if output=$(curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${lazygit_version}_Linux_x86_64.tar.gz" 2>&1); then
-        tar xf lazygit.tar.gz lazygit
-        sudo install lazygit /usr/local/bin
+        tar xf lazygit.tar.gz lazygit >/dev/null
+        sudo install lazygit /usr/local/bin >/dev/null
         printf "\r\e[K\e[32m✅ Installed Lazygit. Continuing...\e[0m"
     else
         printf "\r\e[K\e[31m❌ Failed cURL'ing lazygit. Exiting... \e[0m"
