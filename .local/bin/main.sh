@@ -201,6 +201,7 @@ install_go() {
         printf "\r\e[K\e[34m🛠️ Installing Go version %s to %s... \e[0m" "$go_version" "$go_install_path"
         sudo rm -rf /usr/local/go &&
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
+        sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     else
         printf "\r\e[K\e[31m❌ Error occurred: %s. Exiting... \e[0m" "$output"
         exit 1
