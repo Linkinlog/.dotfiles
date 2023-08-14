@@ -189,7 +189,7 @@ install_go() {
     local go_version
     local go_install_path
 
-    go_version=$(curl -sSL "https://golang.org/VERSION?m=text")
+    go_version="go1.21.0"
     go_install_path="$HOME/${go_version}.${arch}.tar.gz"
 
     if command -v go >/dev/null 2>&1 && [[ "$(go version | awk '{print $3}')" == "$go_version" ]]; then
@@ -200,6 +200,7 @@ install_go() {
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
         printf "\r\e[K\e[34m🛠️ Installing Go version %s to %s... \e[0m" "$go_version" "$go_install_path"
         sudo rm -rf /usr/local/go &&
+        sudo rm /usr/local/bin/go
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     else
