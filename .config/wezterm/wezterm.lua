@@ -35,4 +35,7 @@ config.background = {
     }
 }
 
+config.color_scheme = "Dracula (Official)"
+config.use_fancy_tab_bar = false
+
 return config
