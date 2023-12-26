@@ -1,5 +1,5 @@
 -- Pick an image
-local image = "solen-feyissa-aQHilAxwPHk-unsplash.jpg"
+local image = "space-astronaut.jpg"
 -- Path env var is HOME on unix and HOMEPATH on windows
 local home = os.getenv( "HOME" ) or os.getenv( "HOMEPATH" )
 local fullPath = home .. "/.config/wezterm/backgrounds/" .. image
@@ -24,7 +24,7 @@ config.background = {
     {
         source = { File = fullPath, },
         hsb = {
-            brightness = 0.02,
+            brightness = 0.08,
             hue = 1.2,
             saturation = 1.3,
         },
