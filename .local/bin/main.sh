@@ -19,7 +19,7 @@ readonly HOMEDIR="$HOME"
 
 ## Tools
 readonly TOOLS=("ssh" "gh" "git" "xclip" "docker" "ripgrep" "tmux" "zsh" "brave-browser" "i3")
-readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev" "luarocks" "ruby" "ruby-dev" "php" "php-zip" "unzip" "openjdk-11-jdk" "powershell" "wget" "apt-transport-https" "software-properties-common")
+readonly DEPS=("ninja-build" "gettext" "libtool-bin" "cmake" "g++" "pkg-config" "unzip" "curl" "python3" "python3-pip" "bsdutils" "cmake" "dpkg-dev" "fakeroot" "gcc" "g++" "libegl1-mesa-dev" "libssl-dev" "libfontconfig1-dev" "libwayland-dev" "libx11-xcb-dev" "libxcb-ewmh-dev" "libxcb-icccm4-dev" "libxcb-image0-dev" "libxcb-keysyms1-dev" "libxcb-randr0-dev" "libxcb-render0-dev" "libxcb-xkb-dev" "libxkbcommon-dev" "libxkbcommon-x11-dev" "libxcb-util0-dev" "lsb-release" "python3" "xdg-utils" "xorg-dev" "luarocks" "ruby" "ruby-dev" "php" "npm" "php-zip" "unzip" "openjdk-11-jdk" "powershell" "wget" "apt-transport-https" "software-properties-common")
 
 # Ensure all dependencies are here after installation
 check_dependencies() {
