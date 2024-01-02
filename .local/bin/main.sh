@@ -137,10 +137,10 @@ install_rust() {
     local toolchain="${RUST_TOOLCHAIN:-stable}"
     if ! command -v rustc >/dev/null 2>&1; then
         printf "\r\e[K\e[34m🛠️ Installing Rust stable with Rustup...\e[0m"
-        curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y >/dev/null
+        curl https://sh.rustup.rs -sSf | sh -s -- --profile "$profile" --default-toolchain "$toolchain" -y 
         printf "\r\e[K\e[32m✅ Rust stable installed. Continuing...\e[0m"
     fi
-    rustup default "$toolchain" >/dev/null 2>&1
+    rustup default "$toolchain" 2>&1
     rustup update >/dev/null 2>&1
     printf "\r\e[K\e[32m✅ Rust stable updated. Continuing...\e[0m"
 }
