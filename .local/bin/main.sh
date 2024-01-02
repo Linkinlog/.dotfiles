@@ -199,7 +199,7 @@ install_go() {
 
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
         printf "\r\e[K\e[34m🛠️ Installing Go version %s to %s... \e[0m" "$go_version" "$go_install_path"
-        sudo rm -rf /usr/local/go &&
+        sudo rm -rf /usr/local/go
         sudo rm /usr/local/bin/go
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
