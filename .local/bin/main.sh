@@ -236,7 +236,6 @@ install_go_tools() {
         "github.com/ofabry/go-callvis@latest"
         "github.com/onsi/ginkgo/ginkgo@latest"
         "github.com/rogpeppe/godef@latest"
-        "github.com/searKing/golang/tools/go-enum@latest"
         "github.com/segmentio/golines@latest"
         "github.com/tmc/json-to-struct@latest"
         "github.com/uber/go-torch@latest"
