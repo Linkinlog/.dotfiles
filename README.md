@@ -20,7 +20,7 @@ So, if you're a die-hard Ubuntu/Debian fan, or you just don't care about your ow
 ## Installation
 To get started, just run the install script with the following command:
 ```bash
-bash -c "$(wget -qO- https://raw.githubusercontent.com/linkinlog/.dotfiles/master/.local/bin/main.sh)" -- <hostname> <git_email> <git_user> <gh_personal_token>
+bash -c "$(wget -qO- https://raw.githubusercontent.com/linkinlog/.dotfiles/development/.local/bin/main.sh)" -- <hostname> <git_email> <git_user> <gh_personal_token>
 ```
 Replace `<hostname>`, `<git_email>`, `<git_user>`, and `<gh_personal_token>` with your desired hostname, Git email, Git username, and GitHub personal token, respectively.
 
