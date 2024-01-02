@@ -199,8 +199,8 @@ install_go() {
 
     if output=$(sudo wget -O "$go_install_path" "https://go.dev/dl/${go_version}.${arch}.tar.gz" 2>&1); then
         printf "\r\e[K\e[34m🛠️ Installing Go version %s to %s... \e[0m" "$go_version" "$go_install_path"
-        sudo rm -rf /usr/local/go
-        sudo rm /usr/local/bin/go
+        [ -f /usr/local/bin/go ] && sudo rm /usr/local/bin/go
+        [ -f /usr/local/go ] && sudo rm -rf /usr/local/go
         sudo tar -C /usr/local -xzf "${go_version}.${arch}.tar.gz" >/dev/null
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     else
@@ -340,7 +340,7 @@ install_neovim() {
     if [ -d "$neovim_dir" ]; then
         printf "\r\e[K\e[34m🛠️ Neovim build directory found, updating...\e[0m"
         git -C "$neovim_dir" pull -q >/dev/null
-        rm -rf "$neovim_dir/build" >/dev/null
+        [ -f "$neovim_dir/build" ] && rm -rf "$neovim_dir/build" >/dev/null
     else
         printf "\r\e[K\e[34m🛠️ Neovim build not directory found, cloning...\e[0m"
         git clone -q --depth 1 "$neovim_repo" "$neovim_dir" >/dev/null
