@@ -1,5 +1,5 @@
 -- Pick an image
-local image = "aussie.png"
+local image = "bandit_maggie_tech.png"
 -- Path env var is HOME on unix and HOMEPATH on windows
 local home = os.getenv( "HOME" ) or os.getenv( "HOMEPATH" )
 local fullPath = home .. "/.config/wezterm/backgrounds/" .. image
