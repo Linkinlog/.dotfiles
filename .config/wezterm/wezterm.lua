@@ -31,7 +31,7 @@ config.background = {
         repeat_x = "NoRepeat",
         repeat_y = "NoRepeat",
         height = "Cover",
-        horizontal_align = "Right",
+        horizontal_align = "Center",
     }
 }
 

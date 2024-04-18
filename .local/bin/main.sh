@@ -407,6 +407,7 @@ config_git() {
     fi
     git config --global user.email "$GIT_EMAIL"
     git config --global user.name "$GIT_USER"
+    git config --global core.excludesfile ~/.gitignore
     printf "\r\e[K\e[32m✅ Git configured to use %s as email and %s as user. Continuing...\e[0m" "$GIT_EMAIL" "$GIT_USER"
 }
 
