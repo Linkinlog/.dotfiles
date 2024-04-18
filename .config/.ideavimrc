@@ -1,0 +1,80 @@
+" .ideavimrc is a configuration file for IdeaVim plugin. It uses
+"   the same commands as the original .vimrc configuration.
+" You can find a list of commands here: https://jb.gg/h38q75
+" Find more examples here: https://jb.gg/share-ideavimrc
+
+
+"" -- Suggested options --
+" Show a few lines of context around the cursor. Note that this makes the
+" text scroll if you mouse-click near the start or end of the window.
+set scrolloff=5
+
+" Do incremental searching.
+set incsearch
+
+" Don't use Ex mode, use Q for formatting.
+map Q gq
+
+set incsearch
+set ignorecase
+set smartcase
+set multiple-cursors
+set clipboard+=unnamedplus
+set ideajoin
+set ideaput
+set surround
+
+imap jk <ESC>
+
+
+let mapleader = " "
+
+" Move line up/down in visual mode
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
+
+" Append next line to current
+nnoremap J mzJ`z
+
+" zz after C-d/C-u
+" nnoremap <C-d> <C-d>zz
+" nnoremap <C-u> <C-u>zz
+
+" Center when going to next found
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+" greatest remap ever
+xnoremap <leader>p "_dP
+
+" next greatest remap ever
+nnoremap <leader>y "+y
+vnoremap <leader>y "+y
+nnoremap <leader>Y "+Y
+
+nnoremap <leader>d "+d
+vnoremap <leader>d "+d
+
+nnoremap Q <nop>
+
+nnoremap <C-k> :cnext<CR>zz
+nnoremap <C-j> :cprev<CR>zz
+nnoremap <leader>k :lnext<CR>zz
+nnoremap <leader>j :lprev<CR>zz
+
+nnoremap <leader>s :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left><CR>
+nnoremap <leader>x :!chmod +x %<CR>
+
+" --- Enable IdeaVim plugins https://jb.gg/ideavim-plugins
+
+
+"" Map \r to the Reformat Code action
+"" -- Map IDE actions to IdeaVim -- https://jb.gg/abva4t
+"map \r <Action>(ReformatCode)
+
+"" Map <leader>d to start debug
+"map <leader>d <Action>(Debug)
+
+"" Map \b to toggle the breakpoint on the current line
+"map \b <Action>(ToggleLineBreakpoint)
+
