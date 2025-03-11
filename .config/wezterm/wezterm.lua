@@ -35,6 +35,14 @@ config.background = {
     }
 }
 
+local launch_menu = {}
+
+if wezterm.target_triple == "x86_64-pc-windows-msvc" then
+	config.default_prog = { "cmd.exe ", "/k", "C:\\Program Files\\Git\\bin\\bash.exe" }
+end
+
+config.launch_menu = launch_menu
+
 config.color_scheme = "Dracula (Official)"
 config.use_fancy_tab_bar = false
 
